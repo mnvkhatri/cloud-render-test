@@ -1,77 +1,232 @@
 import os
 import sys
-import time
 import json
-import wave
-import struct
+import base64
 import math
+import struct
+import wave
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 
-OUTPUT_VIDEO = "render_action_test.mp4"
-THUMBNAIL_IMG = "thumb.jpg"
+SARVAM_DEFAULT_KEY = "sk_y4laizws_uJw1vMXtUnIwgZ35791walZ7"
+SARVAM_DEFAULT_SPEAKER = "mani"
+BRIDGE_API_URL = "https://bridge.mnvcloud.online"
 
-def get_payload():
-    payload_str = os.environ.get("CLIENT_PAYLOAD", "{}")
+def get_audio_duration(path):
     try:
-        data = json.loads(payload_str) if payload_str else {}
-        if isinstance(data, dict):
-            return data
+        cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", path]
+        return float(subprocess.check_output(cmd).decode().strip())
+    except Exception:
+        res = subprocess.run(["ffmpeg", "-i", path], stderr=subprocess.PIPE, text=True)
+        for line in res.stderr.splitlines():
+            if "Duration:" in line:
+                time_str = line.split("Duration:")[1].split(",")[0].strip()
+                h, m, s = time_str.split(":")
+                return float(h)*3600 + float(m)*60 + float(s)
+        return 10.0
+
+def generate_script(topic):
+    import requests
+    print(f"🧠 Generating cinematic 4-scene Hindi reel script for: '{topic}'...")
+    
+    prompt = f"""You are a master cinematic documentary director for @lostrealmshindi (exploring ancient Indian mysteries, sunken civilizations, and epic lore).
+Create a captivating 4-scene Hindi video reel package for this topic: "{topic}".
+Output ONLY valid JSON with this exact schema (no markdown, no quotes around json):
+{{
+  "title": "Hindi Title for YouTube Shorts with #Shorts",
+  "scenes": [
+    {{
+      "id": 1,
+      "badge": "रहस्यमयी द्वारका",
+      "title": "समुद्र में डूबा स्वर्णिम शहर",
+      "voiceover_hi": "हजारों साल पहले, अरब सागर की गहराइयों में एक पूरा शहर समा गया। वो शहर था — द्वारका। भगवान श्रीकृष्ण की स्वर्णिम नगरी!",
+      "image_prompt": "Cinematic 9:16 vertical view of ancient stone temple gates submerged underwater in turquoise ocean with sun rays, 8k photorealistic"
+    }},
+    {{
+      "id": 2,
+      "badge": "पुरातत्व खोज",
+      "title": "9000 साल पुरानी दीवारें",
+      "voiceover_hi": "जब समुद्री पुरातत्वविदों ने गुजरात के तट पर खोज की, तो पानी के नीचे 9000 साल पुरानी विशाल दीवारें और खंभे मिले।",
+      "image_prompt": "Scuba diver marine archaeologist exploring ancient submerged sandstone pillars underwater with flashlight, 9:16 cinematic photorealistic"
+    }},
+    {{
+      "id": 3,
+      "badge": "पौराणिक प्रमाण",
+      "title": "महाभारत का जीवंत सच",
+      "voiceover_hi": "महाभारत में वर्णित द्वारका कोई कल्पना नहीं, बल्कि एक ऐतिहासिक सच था—सोने और चांदी के महलों से सजी एक भव्य नगरी।",
+      "image_prompt": "Glorious underwater view of a sprawling submerged ancient Indian golden city with temple spires on the seabed, 9:16 8k"
+    }},
+    {{
+      "id": 4,
+      "badge": "अनसुलझा रहस्य",
+      "title": "क्या आज भी छिपे हैं दिव्य अस्त्र?",
+      "voiceover_hi": "क्या इस समुद्र में आज भी श्रीकृष्ण के दिव्य अस्त्र और गुप्त खजाने दबे हैं? अपनी राय हमें कमेंट्स में बताएं!",
+      "image_prompt": "Ancient sacred round bronze disk artifact with Sanskrit script half-buried in ocean sand underwater, 9:16 cinematic lighting"
+    }}
+  ]
+}}"""
+
+    try:
+        res = requests.post(
+            f"{BRIDGE_API_URL}/v1/chat/completions",
+            headers={"Content-Type": "application/json"},
+            json={
+                "model": "antigravity",
+                "messages": [
+                    {"role": "system", "content": "You are a professional YouTube Shorts director for @lostrealmshindi. Respond ONLY with valid JSON."},
+                    {"role": "user", "content": prompt}
+                ]
+            },
+            timeout=45
+        )
+        content = res.json()["choices"][0]["message"]["content"].strip()
+        if content.startswith("```"):
+            content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+        data = json.loads(content)
+        print("✅ Custom script generated successfully via Antigravity Bridge")
+        return data
     except Exception as e:
-        print(f"Warning: could not parse CLIENT_PAYLOAD: {e}")
-    return {}
+        print(f"⚠️ Script generation error ({e}), using default mythological template for '{topic}'")
+        return {
+            "title": f"{topic} #Shorts",
+            "scenes": [
+                {
+                    "id": 1,
+                    "badge": "प्राचीन रहस्य",
+                    "title": topic,
+                    "voiceover_hi": f"हजारों साल पहले, इतिहास के पन्नों में एक ऐसा रहस्य दर्ज हुआ जिसे आज तक कोई नहीं सुलझा सका—{topic}!",
+                    "image_prompt": f"Mystical sacred ancient Indian cinematic temple scene about {topic}, glowing divine light, 9:16 photorealistic 8k"
+                },
+                {
+                    "id": 2,
+                    "badge": "पुरातत्व खोज",
+                    "title": "रहस्यमयी साक्ष्य",
+                    "voiceover_hi": "जब शोधकर्ताओं और पुरातत्वविदों ने गहराई से अध्ययन किया, तो उन्हें ऐसे साक्ष्य मिले जिन्होंने आधुनिक विज्ञान को भी हैरान कर दिया।",
+                    "image_prompt": "Archaeologists investigating ancient mysterious Indian temple stone carvings and inscriptions, 9:16 cinematic lighting"
+                },
+                {
+                    "id": 3,
+                    "badge": "पौराणिक गाथा",
+                    "title": "प्राचीन ग्रंथों का सच",
+                    "voiceover_hi": "हमारे वेदों और पुराणों में वर्णित यह गाथा मात्र कोई कहानी नहीं, बल्कि उस काल के उन्नत ज्ञान का प्रत्यक्ष प्रमाण है।",
+                    "image_prompt": "Dramatic cosmic visualization of ancient Indian Vedic architecture glowing with golden energy, 9:16 cinematic masterpiece"
+                },
+                {
+                    "id": 4,
+                    "badge": "अंतिम सवाल",
+                    "title": "आपकी क्या राय है?",
+                    "voiceover_hi": "क्या यह केवल संयोग था या किसी प्राचीन अलौकिक शक्ति का चमत्कार? अपनी राय हमें कमेंट्स में बताएं!",
+                    "image_prompt": "Ancient sacred Indian artifact glowing mysteriously in dark stone chamber, 9:16 dramatic lighting"
+                }
+            ]
+        }
 
-def formulate_story(topic):
-    clean_topic = topic.strip().replace("#Shorts", "").replace("#shorts", "").strip()
-    
-    # 3-act storytelling structure: Hook -> Sacred Legend -> Climax & Question
-    shot1_text = f"क्या आप जानते हैं कि {clean_topic} के पीछे कौन सा गहरा रहस्य छुपा है?"
-    shot2_text = "प्राचीन काल और महाकाव्यों में दर्ज यह गाथा आज भी वैज्ञानिकों और शोधकर्ताओं को सोचने पर विवश कर देती है।"
-    shot3_text = "क्या यह केवल एक लोककथा है या हमारे प्राचीन इतिहास का साक्षात प्रमाण? अपनी राय कमेंट्स में बताएं।"
-    
-    full_vo = f"{shot1_text} {shot2_text} {shot3_text}"
-    return clean_topic, shot1_text, shot2_text, shot3_text, full_vo
+def download_flow_image(scene_id, prompt):
+    import requests
+    print(f"🎨 Generating Google Flow image for Scene {scene_id}: '{prompt[:60]}...'")
+    out_path = f"scene_{scene_id}.webp"
+    try:
+        res = requests.post(
+            f"{BRIDGE_API_URL}/generate-image",
+            headers={"Content-Type": "application/json"},
+            json={"prompt": prompt, "aspect_ratio": "9:16", "model": "flow"},
+            timeout=120
+        )
+        if res.status_code == 200 and len(res.content) > 1000:
+            with open(out_path, "wb") as f:
+                f.write(res.content)
+            print(f"✅ Scene {scene_id} image ready ({len(res.content)} bytes)")
+            return out_path
+    except Exception as e:
+        print(f"⚠️ Flow image error on scene {scene_id}: {e}")
+    return None
 
-def generate_voiceover_and_bgm(clean_topic, full_vo):
+def generate_sarvam_audio(scene_id, text, api_key, speaker):
+    import requests
     os.makedirs("audio", exist_ok=True)
-    print(f"🎙️ Generating Hindi Voiceover for: '{clean_topic}'...")
-    from gtts import gTTS
-    tts = gTTS(text=full_vo, lang="hi", slow=False)
-    tts.save("audio/vo.mp3")
-
-    # Probe duration
-    duration = 25.0
+    out_path = f"audio/audio_scene_{scene_id}.wav"
+    print(f"🎙️ Generating Sarvam AI voiceover (speaker: {speaker}) for Scene {scene_id}...")
     try:
-        cmd = [
-            "ffprobe", "-v", "error", "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1", "audio/vo.mp3"
-        ]
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=True)
-        duration = float(res.stdout.strip())
+        res = requests.post(
+            "https://api.sarvam.ai/text-to-speech",
+            headers={
+                "api-subscription-key": api_key,
+                "Content-Type": "application/json"
+            },
+            json={
+                "inputs": [text],
+                "target_language_code": "hi-IN",
+                "speaker": speaker,
+                "model": "bulbul:v3"
+            },
+            timeout=30
+        )
+        data = res.json()
+        if "audios" in data and data["audios"]:
+            audio_bytes = base64.b64decode(data["audios"][0])
+            with open(out_path, "wb") as f:
+                f.write(audio_bytes)
+            print(f"✅ Scene {scene_id} voiceover generated via Sarvam AI")
+            return out_path
     except Exception as e:
-        print(f"Warning: ffprobe failed ({e}), checking ffmpeg -i...")
-        try:
-            res = subprocess.run(["ffmpeg", "-i", "audio/vo.mp3"], stderr=subprocess.PIPE, text=True)
-            for line in res.stderr.splitlines():
-                if "Duration:" in line:
-                    time_str = line.split("Duration:")[1].split(",")[0].strip()
-                    h, m, s = time_str.split(":")
-                    duration = float(h)*3600 + float(m)*60 + float(s)
-                    break
-        except Exception:
-            pass
-    print(f"⏱️ Voiceover Duration: {duration:.2f} seconds")
+        print(f"⚠️ Sarvam AI error on scene {scene_id} ({e}), falling back to gTTS")
+    
+    from gtts import gTTS
+    tts = gTTS(text=text, lang="hi", slow=False)
+    mp3_path = f"audio/audio_scene_{scene_id}.mp3"
+    tts.save(mp3_path)
+    subprocess.run(["ffmpeg", "-y", "-i", mp3_path, out_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return out_path
 
-    # Synthesize Indian Classical Acoustic BGM (Tanpura + Bells + Pakhawaj)
-    print("🎶 Synthesizing Sacred Indian Classical Soundscape (Tanpura in D + Temple Bells + Pakhawaj)...")
+def build_composition(script_data, scene_images, scene_audios):
+    scenes = script_data["scenes"]
+    timeline = []
+    current_time = 0.5
+    
+    concat_inputs = []
+    filter_complex = ""
+    
+    for idx, sc in enumerate(scenes):
+        audio_path = scene_audios[idx]
+        dur = get_audio_duration(audio_path)
+        start = current_time
+        end = start + dur
+        words = sc["voiceover_hi"].split()
+        word_dur = dur / max(len(words), 1)
+        
+        words_timing = []
+        for w_i, w in enumerate(words):
+            words_timing.append({
+                "word": w,
+                "start": start + (w_i * word_dur),
+                "end": start + ((w_i + 1) * word_dur)
+            })
+            
+        timeline.append({
+            "scene": sc,
+            "image": scene_images[idx],
+            "start": start,
+            "end": end,
+            "duration": dur,
+            "words": words_timing
+        })
+        concat_inputs.extend(["-i", audio_path])
+        filter_complex += f"[{idx}:a]apad=pad_dur=0.5[a{idx}];"
+        current_time = end + 0.5
+        
+    total_duration = current_time + 1.0
+    print(f"⏱️ Composition Timeline: {total_duration:.2f}s total across {len(timeline)} scenes")
+    
+    filter_complex += "".join([f"[a{i}]" for i in range(len(scenes))]) + f"concat=n={len(scenes)}:v=0:a=1[voconcat];"
+    filter_complex += "[voconcat]adelay=500|500[vo_out]"
+    subprocess.run(["ffmpeg", "-y"] + concat_inputs + ["-filter_complex", filter_complex, "-map", "[vo_out]", "audio/full_vo.wav"], check=True)
+    
+    print("🎶 Synthesizing Sacred Indian Classical Soundscape (Tanpura + Temple Bells + Pakhawaj)...")
     sample_rate = 44100
-    total_dur = duration + 2.5
-    num_samples = int(sample_rate * total_dur)
+    num_samples = int(sample_rate * total_duration)
     samples = [0.0] * num_samples
-
-    # Tanpura D Root Sa, Pa, High Sa, Low Sa
     tanpura_freqs = [220.0, 293.66, 293.66, 146.83]
-    shot_times = [0.2, duration * 0.38, duration * 0.72, duration]
-
+    
     for t_idx in range(num_samples):
         t = t_idx / sample_rate
         cycle_pos = t % 8.0
@@ -79,18 +234,16 @@ def generate_voiceover_and_bgm(clean_topic, full_vo):
         pluck_t = cycle_pos % 2.0
         env = (pluck_t / 0.05) if pluck_t < 0.05 else math.exp(-(pluck_t - 0.05) * 1.2)
         f0 = tanpura_freqs[str_idx]
-        
         tone = (
             0.5 * math.sin(2 * math.pi * f0 * t) +
             0.3 * math.sin(2 * math.pi * f0 * 2 * t) +
-            0.2 * math.sin(2 * math.pi * f0 * 3 * t) +
-            0.15 * math.sin(2 * math.pi * f0 * 4 * t)
+            0.2 * math.sin(2 * math.pi * f0 * 3 * t)
         )
         drone = 0.25 * math.sin(2 * math.pi * 146.83 * t) + 0.20 * math.sin(2 * math.pi * 73.415 * t)
         samples[t_idx] += (tone * env * 0.35 + drone * 0.25)
-
-    # Resonant Bronze Temple Bells
-    for bt in shot_times:
+        
+    scene_start_times = [sc["start"] for sc in timeline]
+    for bt in scene_start_times:
         b_start = int(bt * sample_rate)
         b_len = int(3.5 * sample_rate)
         for i in range(b_len):
@@ -99,61 +252,127 @@ def generate_voiceover_and_bgm(clean_topic, full_vo):
             b_env = math.exp(-t_bell * 1.2)
             bell = (
                 0.40 * math.sin(2 * math.pi * 587.33 * t_bell) * math.exp(-t_bell * 0.8) +
-                0.30 * math.sin(2 * math.pi * 1185.0 * t_bell) * math.exp(-t_bell * 1.5) +
-                0.20 * math.sin(2 * math.pi * 1762.0 * t_bell) * math.exp(-t_bell * 2.2)
+                0.30 * math.sin(2 * math.pi * 1185.0 * t_bell) * math.exp(-t_bell * 1.5)
             ) * b_env * 0.35
             samples[b_start + i] += bell
 
-    # Soft Earthen Pakhawaj Drum Impact
-    for bt in shot_times:
-        d_start = int(bt * sample_rate)
-        d_len = int(1.0 * sample_rate)
-        for i in range(d_len):
-            if d_start + i >= num_samples: break
-            t_drum = i / sample_rate
-            d_env = math.exp(-t_drum * 4.0)
-            f_glide = 55.0 + 40.0 * math.exp(-t_drum * 8.0)
-            samples[d_start + i] += math.sin(2 * math.pi * f_glide * t_drum) * d_env * 0.4
+    for pt in scene_start_times:
+        p_start = int(pt * sample_rate)
+        p_len = int(0.7 * sample_rate)
+        for i in range(p_len):
+            if p_start + i >= num_samples: break
+            t_p = i / sample_rate
+            f_glide = 55.0 + 40.0 * (1.0 - t_p / 0.7)
+            drum = math.sin(2 * math.pi * f_glide * t_p) * math.exp(-t_p * 6.0) * 0.35
+            samples[p_start + i] += drum
 
-    # Peak normalize
-    max_amp = max(abs(s) for s in samples) or 1.0
-    samples = [s * (0.65 / max_amp) for s in samples]
+    max_amp = max(max(abs(s) for s in samples), 0.001)
+    norm = [s / max_amp * 0.75 for s in samples]
+    with wave.open("audio/bgm.wav", "w") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sample_rate)
+        wf.writeframes(struct.pack(f"<{len(norm)}h", *[int(max(-32767, min(32767, s * 32767))) for s in norm]))
 
-    # Write bgm.wav
-    with wave.open('audio/bgm.wav', 'wb') as wav:
-        wav.setnchannels(1)
-        wav.setsampwidth(2)
-        wav.setframerate(sample_rate)
-        data = bytearray()
-        for s in samples:
-            data.extend(struct.pack('<h', int(max(min(s, 1.0), -1.0) * 32767)))
-        wav.writeframes(data)
-
-    # Master mix at -14 LUFS
-    print("🎚️ Master mixing Voiceover + BGM at -14 LUFS...")
+    print("🎚️ Master mixing full voiceover + acoustic soundbed at -14 LUFS...")
     cmd_mix = [
-        "ffmpeg", "-y", "-i", "audio/vo.mp3", "-i", "audio/bgm.wav",
+        "ffmpeg", "-y", "-i", "audio/full_vo.wav", "-i", "audio/bgm.wav",
         "-filter_complex", "[1:a]volume=0.22[bgm];[0:a][bgm]amix=inputs=2:duration=first,loudnorm=I=-14:LRA=7:tp=-1.5[out]",
         "-map", "[out]", "-c:a", "libmp3lame", "-b:a", "192k", "audio/mix.mp3"
     ]
     subprocess.run(cmd_mix, check=True)
-    print("✅ audio/mix.mp3 mastered successfully!")
-    return duration, shot_times
+    print("✅ audio/mix.mp3 mastered successfully")
 
-def generate_sacred_cinema_html(clean_topic, shot1_text, shot2_text, shot3_text, duration, shot_times):
-    t_shot1_end = shot_times[1]
-    t_shot2_end = shot_times[2]
-    
+    scenes_html = ""
+    for idx, sc_data in enumerate(timeline):
+        sc = sc_data["scene"]
+        img_src = sc_data["image"]
+        words_spans = " ".join([
+            f'<span class="k-word" id="kw_{idx}_{w_i}">{w["word"]}</span>'
+            for w_i, w in enumerate(sc_data["words"])
+        ])
+        
+        scenes_html += f"""
+    <!-- Scene {idx + 1} -->
+    <div class="scene-layer" id="scene_{idx}">
+      <img class="scene-bg" id="bg_{idx}" src="{img_src}" alt="Scene {idx + 1}" data-layout-allow-overflow="true" />
+      <div class="scene-vignette"></div>
+      
+      <!-- Scene Top Plaque -->
+      <div class="top-plaque" id="plaque_{idx}" data-layout-allow-safe-zone="true">
+        <div class="channel-pill">★ LOST REALMS HINDI</div>
+        <div class="scene-badge">{sc["badge"]}</div>
+        <div class="scene-title">{sc["title"]}</div>
+      </div>
+
+      <!-- Scene Subtitle Card -->
+      <div class="sub-card-wrap" id="sub_wrap_{idx}" data-layout-allow-safe-zone="true">
+        <div class="sub-card">
+          <div class="sub-text-flow">
+            {words_spans}
+          </div>
+        </div>
+      </div>
+    </div>
+"""
+
+    gsap_script = f"""
+    gsap.registerPlugin();
+    const tl = gsap.timeline({{ paused: true }});
+    window.__timelines = {{ main: tl }};
+"""
+
+    for idx, sc_data in enumerate(timeline):
+        s_start = sc_data["start"]
+        s_end = sc_data["end"]
+        s_dur = sc_data["duration"]
+        
+        gsap_script += f"""
+    // SCENE {idx + 1}
+    tl.to("#scene_{idx}", {{ opacity: 1, duration: 0.5 }}, {max(0, s_start - 0.3):.2f});
+    tl.fromTo("#bg_{idx}", 
+      {{ scale: 1.0, y: 0 }}, 
+      {{ scale: 1.12, y: -25, duration: {s_dur + 0.8:.2f}, ease: "none" }}, 
+      {max(0, s_start - 0.3):.2f}
+    );
+    tl.fromTo("#plaque_{idx}", 
+      {{ opacity: 0, y: -30 }}, 
+      {{ opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }}, 
+      {s_start:.2f}
+    );
+    tl.fromTo("#sub_wrap_{idx}", 
+      {{ opacity: 0, y: 20 }}, 
+      {{ opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }}, 
+      {s_start:.2f}
+    );
+"""
+        for w_i, w in enumerate(sc_data["words"]):
+            w_start = w["start"]
+            w_end = w["end"]
+            gsap_script += f"""
+    tl.to("#kw_{idx}_{w_i}", {{ color: "#ffdf00", textShadow: "0 0 16px rgba(255, 215, 0, 0.8)", scale: 1.08, duration: 0.1 }}, {w_start:.2f});
+    tl.to("#kw_{idx}_{w_i}", {{ color: "#ffffff", textShadow: "none", scale: 1.0, duration: 0.1 }}, {w_end:.2f});
+"""
+
+        if idx < len(timeline) - 1:
+            gsap_script += f"""
+    tl.to("#scene_{idx}", {{ opacity: 0, duration: 0.5 }}, {s_end:.2f});
+"""
+        else:
+            gsap_script += f"""
+    tl.to("#scene_{idx}", {{ opacity: 1, duration: 1.0 }}, {total_duration - 1.0:.2f});
+"""
+
     html = f"""<!doctype html>
 <html lang="hi" data-resolution="portrait">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=1080, height=1920" />
-  <title>Lost Realms Hindi - {clean_topic}</title>
+  <title>Lost Realms Hindi - {script_data.get("title", "")}</title>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Marcellus&family=Noto+Serif+Devanagari:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Serif+Devanagari:wght@600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * {{
       margin: 0;
@@ -161,471 +380,199 @@ def generate_sacred_cinema_html(clean_topic, shot1_text, shot2_text, shot3_text,
       box-sizing: border-box;
     }}
     html, body {{
-      margin: 0;
       width: 1080px;
       height: 1920px;
       overflow: hidden;
-      background: #1a0f08;
+      background: #04090f;
       font-family: 'Noto Serif Devanagari', 'Cinzel', serif;
       -webkit-font-smoothing: antialiased;
     }}
-
     #stage {{
       position: relative;
       width: 1080px;
       height: 1920px;
-      background: radial-gradient(circle at 50% 45%, #ecd8b9 0%, #d8ba93 50%, #b88f61 85%, #8c633a 100%);
       overflow: hidden;
+      background: #04090f;
     }}
-
-    /* Aged parchment vignette overlay */
-    .stage-vignette {{
+    .scene-layer {{
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at 50% 50%, transparent 55%, rgba(45, 20, 5, 0.45) 80%, rgba(20, 8, 2, 0.85) 100%);
-      pointer-events: none;
-      z-index: 5;
+      width: 1080px;
+      height: 1920px;
+      opacity: 0;
+      overflow: hidden;
     }}
-
-    /* Top and bottom ornate theater valence borders */
-    .stage-border-top, .stage-border-bottom {{
+    .scene-bg {{
       position: absolute;
+      top: 0;
       left: 0;
       width: 1080px;
-      z-index: 90;
-      pointer-events: none;
+      height: 1920px;
+      object-fit: cover;
+      transform-origin: center center;
     }}
-    .stage-border-top {{ top: 0; }}
-    .stage-border-bottom {{ bottom: 0; transform: rotate(180deg); }}
-
-    /* Channel Header */
-    .channel-header {{
+    .scene-vignette {{
       position: absolute;
-      top: 105px;
+      top: 0;
       left: 0;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 85;
-    }}
-    .channel-badge {{
-      display: inline-flex;
-      align-items: center;
-      gap: 14px;
-      padding: 12px 34px;
-      background: rgba(43, 24, 13, 0.94);
-      border: 2.5px solid #d4af37;
-      border-radius: 40px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }}
-    .channel-badge span {{
-      font-family: 'Noto Serif Devanagari', 'Cinzel', serif;
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: 4px;
-      color: #ffd97d;
-      text-transform: uppercase;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-    }}
-
-    /* Hanging Wooden Signboard Component */
-    .signboard-wrapper {{
-      position: absolute;
-      top: -340px;
-      left: 50%;
-      margin-left: -440px;
-      width: 880px;
-      z-index: 75;
-      transform-origin: 50% 0;
-    }}
-    .signboard-ropes {{
-      width: 100%;
-      height: 95px;
-      display: flex;
-      justify-content: space-around;
-      padding: 0 120px;
-    }}
-    .rope {{
-      width: 8px;
-      height: 100%;
-      background: repeating-linear-gradient(
-        0deg,
-        #795548,
-        #795548 10px,
-        #4e342e 10px,
-        #4e342e 20px
-      );
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
-    }}
-    .signboard-plaque {{
-      width: 880px;
-      background: linear-gradient(180deg, #422817 0%, #29160a 100%);
-      border: 6px solid #d4af37;
-      border-radius: 20px;
-      padding: 22px 36px;
-      text-align: center;
-      box-shadow: 0 18px 40px rgba(0,0,0,0.7), inset 0 0 20px rgba(212, 175, 55, 0.35);
-      position: relative;
-    }}
-    .signboard-plaque::before {{
-      content: "";
-      position: absolute;
-      top: 8px; left: 8px; right: 8px; bottom: 8px;
-      border: 1.5px dashed #ffd97d;
-      border-radius: 14px;
+      width: 1080px;
+      height: 1920px;
+      background: radial-gradient(circle at center, transparent 35%, rgba(0,0,0,0.55) 75%, rgba(0,0,0,0.9) 100%),
+                  linear-gradient(180deg, rgba(0,0,0,0.75) 0%, transparent 20%, transparent 60%, rgba(0,0,0,0.9) 100%);
       pointer-events: none;
     }}
-    .signboard-text {{
-      font-family: 'Noto Serif Devanagari', 'Cinzel', serif;
-      font-size: 44px;
-      font-weight: 900;
-      letter-spacing: 2px;
-      color: #fff8e7;
-      line-height: 1.28;
-      text-shadow: 0 4px 12px rgba(0,0,0,0.9), 0 0 18px rgba(255, 217, 125, 0.5);
-    }}
-    .signboard-subtext {{
-      font-family: 'Noto Serif Devanagari', 'Marcellus', serif;
-      font-size: 26px;
-      letter-spacing: 2px;
-      color: #ffd97d;
-      margin-top: 6px;
-      text-shadow: 0 2px 6px rgba(0,0,0,0.8);
-    }}
-
-    /* Sacred Centerpiece Arena */
-    .sacred-centerpiece {{
+    .top-valence {{
       position: absolute;
-      top: 500px;
-      left: 50%;
-      margin-left: -400px;
-      width: 800px;
-      height: 800px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      top: 0;
+      left: 0;
+      width: 1080px;
+      height: 110px;
       z-index: 50;
-      transform-origin: 50% 50%;
-    }}
-    .divine-aura {{
-      position: absolute;
-      width: 700px;
-      height: 700px;
-      background: radial-gradient(circle, rgba(255, 215, 0, 0.35) 0%, rgba(255, 109, 0, 0.2) 45%, rgba(0,0,0,0) 75%);
-      border-radius: 50%;
-      filter: blur(25px);
       pointer-events: none;
     }}
-
-    /* Subtitle Card strictly in safe zone */
-    .subtitle-wrapper {{
+    .bottom-valence {{
       position: absolute;
-      bottom: 270px;
-      left: 50%;
-      margin-left: -480px;
-      width: 960px;
-      z-index: 85;
+      bottom: 0;
+      left: 0;
+      width: 1080px;
+      height: 90px;
+      z-index: 50;
+      pointer-events: none;
+      transform: rotate(180deg);
+    }}
+    .top-plaque {{
+      position: absolute;
+      top: 180px;
+      left: 60px;
+      right: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 40;
+    }}
+    .channel-pill {{
+      background: linear-gradient(135deg, #1c150c, #2d2215);
+      border: 2px solid #e0a93b;
+      color: #ffd700;
+      font-family: 'Cinzel', serif;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      padding: 8px 30px;
+      border-radius: 30px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.7), inset 0 0 10px rgba(224,169,59,0.3);
+      margin-bottom: 12px;
+    }}
+    .scene-badge {{
+      color: #ff9800;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+      margin-bottom: 6px;
+    }}
+    .scene-title {{
+      color: #ffffff;
+      font-size: 40px;
+      font-weight: 900;
+      text-shadow: 0 3px 12px rgba(0,0,0,0.9), 0 0 25px rgba(212,175,55,0.4);
       text-align: center;
-      pointer-events: none;
+      line-height: 1.25;
     }}
-    .subtitle-card {{
-      display: inline-block;
-      max-width: 940px;
-      padding: 22px 42px;
-      background: rgba(26, 15, 8, 0.95);
-      border: 3px solid #e0a93b;
+    .sub-card-wrap {{
+      position: absolute;
+      bottom: 260px;
+      left: 50px;
+      right: 50px;
+      z-index: 40;
+    }}
+    .sub-card {{
+      background: rgba(10, 16, 24, 0.88);
+      border: 2px solid #d4af37;
       border-radius: 20px;
-      box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+      padding: 24px 30px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.85), inset 0 0 20px rgba(212,175,55,0.2);
+      backdrop-filter: blur(12px);
     }}
-    .subtitle-text {{
-      font-family: 'Noto Serif Devanagari', serif;
+    .sub-text-flow {{
+      color: #e0e0e0;
       font-size: 38px;
       font-weight: 700;
-      line-height: 1.4;
+      line-height: 1.5;
+      text-align: center;
+    }}
+    .k-word {{
+      display: inline-block;
+      margin: 0 5px;
       color: #ffffff;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.9);
-    }}
-    .subtitle-highlight {{
-      color: #ffca28;
-      font-weight: 900;
-      text-shadow: 0 0 15px rgba(255, 202, 40, 0.5);
-    }}
-
-    /* Outro Bell */
-    #outro-bell {{
-      position: absolute;
-      top: 480px;
-      left: 50%;
-      margin-left: -120px;
-      width: 240px;
-      height: 240px;
-      z-index: 60;
-      opacity: 0;
-      transform-origin: 50% 0%;
     }}
   </style>
 </head>
 <body>
-  <div id="root" data-composition-id="main" data-start="0" data-duration="{duration:.2f}" data-width="1080" data-height="1920">
-    <audio id="a-roll-audio" src="audio/mix.mp3" data-start="0" data-duration="{duration:.2f}" data-track-index="2" data-volume="1"></audio>
+  <div id="stage" data-composition-id="main" data-width="1080" data-height="1920">
+    <audio id="master_audio" src="audio/mix.mp3" preload="auto"></audio>
+    <svg class="top-valence" viewBox="0 0 1080 110" preserveAspectRatio="none">
+      <path d="M0,0 L1080,0 L1080,45 Q1020,80 960,45 Q900,80 840,45 Q780,80 720,45 Q660,80 600,45 Q540,80 480,45 Q420,80 360,45 Q300,80 240,45 Q180,80 120,45 Q60,80 0,45 Z" fill="#421010" stroke="#d4af37" stroke-width="3"/>
+    </svg>
+    <svg class="bottom-valence" viewBox="0 0 1080 110" preserveAspectRatio="none">
+      <path d="M0,0 L1080,0 L1080,45 Q1020,80 960,45 Q900,80 840,45 Q780,80 720,45 Q660,80 600,45 Q540,80 480,45 Q420,80 360,45 Q300,80 240,45 Q180,80 120,45 Q60,80 0,45 Z" fill="#421010" stroke="#d4af37" stroke-width="3"/>
+    </svg>
 
-    <div id="stage">
-      <div class="stage-vignette" data-layout-ignore></div>
-
-      <!-- Top Border SVG -->
-      <svg class="stage-border-top" data-layout-ignore width="1080" height="95" viewBox="0 0 1080 95" fill="none">
-        <path d="M0 0H1080V50C1040 75 1000 50 960 75C920 50 880 75 840 50C800 75 760 50 720 75C680 50 640 75 600 50C560 75 520 50 480 75C440 50 400 75 360 50C320 75 280 50 240 75C200 50 160 75 120 50C80 75 40 50 0 75V0Z" fill="#541212"/>
-        <path d="M0 45C40 70 80 45 120 70C160 45 200 70 240 45C280 70 320 45 360 70C400 45 440 70 480 45C520 70 560 45 600 70C640 45 680 70 720 45C760 70 800 45 840 70C880 45 920 70 960 45C1000 70 1040 45 1080 70V76C1040 51 1000 76 960 51C920 76 880 51 840 76C800 51 760 76 720 51C680 76 640 51 600 76C560 51 520 76 480 51C440 76 400 51 360 76C320 51 280 76 240 51C200 76 160 51 120 76C80 51 40 76 0 51V45Z" fill="#e0a93b"/>
-        <g fill="#fdfbf7">
-          <circle cx="60" cy="50" r="4"/><circle cx="180" cy="50" r="4"/><circle cx="300" cy="50" r="4"/><circle cx="420" cy="50" r="4"/>
-          <circle cx="540" cy="50" r="4"/><circle cx="660" cy="50" r="4"/><circle cx="780" cy="50" r="4"/><circle cx="900" cy="50" r="4"/>
-          <circle cx="1020" cy="50" r="4"/>
-        </g>
-      </svg>
-
-      <!-- Bottom Border SVG -->
-      <svg class="stage-border-bottom" data-layout-ignore width="1080" height="95" viewBox="0 0 1080 95" fill="none">
-        <path d="M0 0H1080V50C1040 75 1000 50 960 75C920 50 880 75 840 50C800 75 760 50 720 75C680 50 640 75 600 50C560 75 520 50 480 75C440 50 400 75 360 50C320 75 280 50 240 75C200 50 160 75 120 50C80 75 40 50 0 75V0Z" fill="#541212"/>
-        <path d="M0 45C40 70 80 45 120 70C160 45 200 70 240 45C280 70 320 45 360 70C400 45 440 70 480 45C520 70 560 45 600 70C640 45 680 70 720 45C760 70 800 45 840 70C880 45 920 70 960 45C1000 70 1040 45 1080 70V76C1040 51 1000 76 960 51C920 76 880 51 840 76C800 51 760 76 720 51C680 76 640 51 600 76C560 51 520 76 480 51C440 76 400 51 360 76C320 51 280 76 240 51C200 76 160 51 120 76C80 51 40 76 0 51V45Z" fill="#e0a93b"/>
-        <g fill="#fdfbf7">
-          <circle cx="60" cy="50" r="4"/><circle cx="180" cy="50" r="4"/><circle cx="300" cy="50" r="4"/><circle cx="420" cy="50" r="4"/>
-          <circle cx="540" cy="50" r="4"/><circle cx="660" cy="50" r="4"/><circle cx="780" cy="50" r="4"/><circle cx="900" cy="50" r="4"/>
-          <circle cx="1020" cy="50" r="4"/>
-        </g>
-      </svg>
-
-      <!-- Channel Brand / Badge -->
-      <div class="channel-header" data-layout-ignore>
-        <div class="channel-badge">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="#ffd97d"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          <span>LOST REALMS HINDI</span>
-        </div>
-      </div>
-
-      <!-- Hanging Wooden Signboard Component -->
-      <div id="signboard" class="signboard-wrapper" data-layout-allow-safe-zone data-layout-allow-overlap>
-        <div class="signboard-ropes" data-layout-ignore>
-          <div class="rope"></div>
-          <div class="rope"></div>
-        </div>
-        <div class="signboard-plaque" data-layout-allow-overlap>
-          <div id="signboard-title" class="signboard-text" data-layout-allow-safe-zone>{clean_topic}</div>
-          <div id="signboard-desc" class="signboard-subtext" data-layout-allow-safe-zone data-layout-ignore>खोई हुई सभ्यताओं का रहस्य</div>
-        </div>
-      </div>
-
-      <!-- Sacred Centerpiece: Celestial Sudarshana Chakra & Trishul Mandapam -->
-      <div id="centerpiece" class="sacred-centerpiece" data-layout-allow-overlap>
-        <div class="divine-aura"></div>
-        <!-- Intricate Sacred Vector Art -->
-        <svg id="sacred-mandala" width="700" height="700" viewBox="0 0 700 700" fill="none">
-          <defs>
-            <radialGradient id="goldRadial" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#fff8e7"/>
-              <stop offset="40%" stop-color="#ffd700"/>
-              <stop offset="85%" stop-color="#ff8c00"/>
-              <stop offset="100%" stop-color="#b85d00"/>
-            </radialGradient>
-            <filter id="divineGlow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="14" result="blur"/>
-              <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-            </filter>
-          </defs>
-          <!-- Outer Celestial Ray Ring -->
-          <g id="chakra-rays" stroke="url(#goldRadial)" stroke-width="4" opacity="0.85">
-            <line x1="350" y1="50" x2="350" y2="120"/>
-            <line x1="350" y1="580" x2="350" y2="650"/>
-            <line x1="50" y1="350" x2="120" y2="350"/>
-            <line x1="580" y1="350" x2="650" y2="350"/>
-            <line x1="138" y1="138" x2="188" y2="188"/>
-            <line x1="512" y1="512" x2="562" y2="562"/>
-            <line x1="138" y1="562" x2="188" y2="512"/>
-            <line x1="512" y1="188" x2="562" y2="138"/>
-          </g>
-          <!-- Ornate Filigree Rings -->
-          <circle cx="350" cy="350" r="260" stroke="#ffd700" stroke-width="5" stroke-dasharray="14 8" fill="none"/>
-          <circle cx="350" cy="350" r="220" stroke="#d4af37" stroke-width="3" fill="rgba(43, 24, 13, 0.45)"/>
-          <circle cx="350" cy="350" r="170" stroke="#ffd700" stroke-width="4" fill="none"/>
-          <!-- Inner Sacred Trishul & Sun Emblem -->
-          <g filter="url(#divineGlow)">
-            <path d="M350 170 L350 510" stroke="url(#goldRadial)" stroke-width="12" stroke-linecap="round"/>
-            <path d="M300 240 Q350 310 400 240" stroke="url(#goldRadial)" stroke-width="10" fill="none" stroke-linecap="round"/>
-            <path d="M300 240 L285 200 L305 210 Z" fill="#ffd700"/>
-            <path d="M400 240 L415 200 L395 210 Z" fill="#ffd700"/>
-            <path d="M350 170 L338 130 L350 110 L362 130 Z" fill="#fff8e7"/>
-            <path d="M320 330 L380 330 L320 370 L380 370 Z" fill="#ff8c00" stroke="#ffd700" stroke-width="3"/>
-          </g>
-          <!-- Lotus Petals Circle -->
-          <g fill="none" stroke="#ffd700" stroke-width="2.5" opacity="0.9">
-            <path d="M350 90 Q370 130 350 170 Q330 130 350 90 Z"/>
-            <path d="M350 610 Q370 570 350 530 Q330 570 350 610 Z"/>
-            <path d="M90 350 Q130 370 170 350 Q130 330 90 350 Z"/>
-            <path d="M610 350 Q570 370 530 350 Q570 330 610 350 Z"/>
-          </g>
-        </svg>
-      </div>
-
-      <!-- Outro Temple Bell -->
-      <div id="outro-bell" data-layout-allow-overlap>
-        <svg width="240" height="240" viewBox="0 0 240 240" fill="none">
-          <circle cx="120" cy="20" r="14" fill="none" stroke="#d4af37" stroke-width="6"/>
-          <path d="M80 60 C80 40 160 40 160 60 L180 150 C190 180 50 180 60 150 Z" fill="url(#goldRadial)" stroke="#4e342e" stroke-width="5"/>
-          <circle cx="120" cy="180" r="18" fill="#ffd700" stroke="#4e342e" stroke-width="4"/>
-        </svg>
-      </div>
-
-      <!-- Subtitles Card strictly in safe zone -->
-      <div class="subtitle-wrapper" data-layout-allow-safe-zone data-layout-allow-overlap>
-        <div class="subtitle-card" data-layout-allow-overlap>
-          <div id="subtitle-text" class="subtitle-text" data-layout-allow-safe-zone>
-            {shot1_text}
-          </div>
-        </div>
-      </div>
-    </div>
+    {scenes_html}
   </div>
 
   <script>
-    const tl = gsap.timeline({{ defaults: {{ ease: "power2.inOut" }} }});
-
-    // Initial setup
-    gsap.set("#signboard", {{ y: 0, rotation: 0 }});
-    gsap.set("#centerpiece", {{ scale: 0.85, opacity: 0 }});
-    gsap.set("#outro-bell", {{ opacity: 0, scale: 0 }});
-
-    // Ambient continuous motion
-    gsap.to("#chakra-rays", {{
-      rotation: 360,
-      transformOrigin: "350px 350px",
-      duration: 35,
-      repeat: 4,
-      ease: "none"
-    }});
-
-    gsap.to(".divine-aura", {{
-      scale: 1.15,
-      opacity: 0.7,
-      duration: 3,
-      repeat: 8,
-      yoyo: true,
-      ease: "sine.inOut"
-    }});
-
-    // -------------------------------------------------------------
-    // SHOT 1: 0.0s - {t_shot1_end:.2f}s | THE HOOK
-    // -------------------------------------------------------------
-    tl.to("#signboard", {{
-      y: 450,
-      duration: 1.2,
-      ease: "elastic.out(1, 0.45)"
-    }}, 0.2);
-
-    tl.to("#signboard", {{
-      rotation: 2.5,
-      duration: 1.8,
-      repeat: 3,
-      yoyo: true,
-      ease: "sine.inOut"
-    }}, 1.4);
-
-    tl.to("#centerpiece", {{
-      opacity: 1,
-      scale: 1.0,
-      duration: 1.5,
-      ease: "power2.out"
-    }}, 0.6);
-
-    // -------------------------------------------------------------
-    // SHOT 2: {t_shot1_end:.2f}s - {t_shot2_end:.2f}s | THE SACRED HISTORY
-    // -------------------------------------------------------------
-    tl.call(() => {{
-      document.getElementById("signboard-title").innerText = "प्राचीन गाथा व रहस्य";
-      document.getElementById("signboard-desc").innerText = "महाकाव्यों में छुपा सत्य";
-      document.getElementById("subtitle-text").innerHTML = '{shot2_text}';
-    }}, null, {t_shot1_end:.2f});
-
-    tl.to("#centerpiece", {{
-      scale: 1.12,
-      duration: 2.0,
-      ease: "power2.inOut"
-    }}, {t_shot1_end + 0.3:.2f});
-
-    // -------------------------------------------------------------
-    // SHOT 3: {t_shot2_end:.2f}s - {duration:.2f}s | CLIMAX & OUTRO CTA
-    // -------------------------------------------------------------
-    tl.call(() => {{
-      document.getElementById("signboard-title").innerText = "आपकी क्या राय है?";
-      document.getElementById("signboard-desc").innerText = "कमेंट्स में ज़रूर बताएं ✨";
-      document.getElementById("subtitle-text").innerHTML = '{shot3_text}';
-    }}, null, {t_shot2_end:.2f});
-
-    tl.to("#centerpiece", {{
-      opacity: 0.35,
-      scale: 0.8,
-      duration: 1.0
-    }}, {t_shot2_end:.2f});
-
-    tl.to("#outro-bell", {{
-      opacity: 1,
-      scale: 1.2,
-      duration: 0.8,
-      ease: "back.out(1.7)"
-    }}, {t_shot2_end + 0.2:.2f});
-
-    tl.to("#outro-bell", {{
-      rotation: 18,
-      transformOrigin: "50% 0%",
-      duration: 0.45,
-      repeat: 8,
-      yoyo: true,
-      ease: "sine.inOut"
-    }}, {t_shot2_end + 0.8:.2f});
-
-    // Register with HyperFrames
-    window.__timelines = window.__timelines || {{}};
-    window.__timelines["main"] = tl;
+{gsap_script}
   </script>
 </body>
 </html>
 """
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✅ Sacred Cinema index.html generated!")
-
-def render_with_hyperframes():
-    print("🎬 Rendering composition via HyperFrames...")
-    cmd = ["npx", "-y", "hyperframes", "render", "-o", OUTPUT_VIDEO, "--fps", "24", "-q", "draft"]
-    subprocess.run(cmd, check=True)
-    print(f"🎉 Video rendered successfully! File size: {os.path.getsize(OUTPUT_VIDEO) / (1024*1024):.2f} MB")
-
-def extract_thumbnail():
-    print("🖼️ Extracting high-contrast cinematic thumbnail...")
-    cmd = [
-        "ffmpeg", "-y", "-ss", "00:00:03", "-i", OUTPUT_VIDEO,
-        "-frames:v", "1", "-q:v", "2", THUMBNAIL_IMG
-    ]
-    subprocess.run(cmd, check=True)
-    print(f"✅ {THUMBNAIL_IMG} extracted ({os.path.getsize(THUMBNAIL_IMG)} bytes).")
+    print("✅ Sacred Cinema Multi-Scene index.html generated successfully!")
 
 def main():
-    start_time = time.time()
-    payload = get_payload()
-    raw_topic = payload.get("topic") or "समुद्र की गहराइयों में छुपा द्वारका का रहस्य"
+    print("🚀 Starting Sacred Cinema Cloud Video Render...")
+    client_payload = {}
+    if "CLIENT_PAYLOAD" in os.environ and os.environ["CLIENT_PAYLOAD"].strip():
+        try:
+            client_payload = json.loads(os.environ["CLIENT_PAYLOAD"])
+        except Exception:
+            pass
+
+    topic = client_payload.get("topic") or "समुद्र की गहराइयों में छुपा द्वारका का रहस्य"
+    sarvam_key = client_payload.get("sarvam_api_key") or SARVAM_DEFAULT_KEY
+    sarvam_speaker = client_payload.get("sarvam_speaker") or SARVAM_DEFAULT_SPEAKER
     
-    clean_topic, shot1_text, shot2_text, shot3_text, full_vo = formulate_story(raw_topic)
-    duration, shot_times = generate_voiceover_and_bgm(clean_topic, full_vo)
-    generate_sacred_cinema_html(clean_topic, shot1_text, shot2_text, shot3_text, duration, shot_times)
-    render_with_hyperframes()
-    extract_thumbnail()
-    
-    elapsed = time.time() - start_time
-    print(f"\n==========================================")
-    print(f"🏁 TOTAL SACRED CINEMA RENDER TIME: {elapsed:.2f} seconds")
-    print(f"==========================================")
+    script_data = generate_script(topic)
+    scenes = script_data["scenes"]
+
+    print(f"🎨 Generating {len(scenes)} visual scene artworks in parallel via Google Flow...")
+    scene_images = [None] * len(scenes)
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = {executor.submit(download_flow_image, sc["id"], sc["image_prompt"]): idx for idx, sc in enumerate(scenes)}
+        for fut in futures:
+            idx = futures[fut]
+            scene_images[idx] = fut.result()
+
+    print(f"🎙️ Generating voiceover for {len(scenes)} scenes via Sarvam AI (Mani)...")
+    scene_audios = []
+    for sc in scenes:
+        audio_file = generate_sarvam_audio(sc["id"], sc["voiceover_hi"], sarvam_key, sarvam_speaker)
+        scene_audios.append(audio_file)
+
+    build_composition(script_data, scene_images, scene_audios)
+
+    print("🎬 Rendering 1080x1920 24fps vertical video composition via HyperFrames...")
+    cmd_render = ["npx", "-y", "hyperframes", "render", "-o", "render_action_test.mp4", "--fps", "24", "-q", "draft"]
+    subprocess.run(cmd_render, check=True)
+
+    print("📸 Extracting video thumbnail (thumb.jpg)...")
+    cmd_thumb = ["ffmpeg", "-y", "-ss", "00:00:04", "-i", "render_action_test.mp4", "-vframes", "1", "-q:v", "2", "thumb.jpg"]
+    subprocess.run(cmd_thumb, check=True)
+    print("🎉 Complete Sacred Cinema Video Rendered & Saved!")
 
 if __name__ == "__main__":
     main()
