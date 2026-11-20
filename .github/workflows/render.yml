@@ -25,19 +25,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install System FFmpeg & Fonts
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-core
-          mkdir -p ~/.local/share/fonts
-          curl -sL "https://github.com/google/fonts/raw/main/ofl/notoserifdevanagari/NotoSerifDevanagari%5Bwght%5D.ttf" -o ~/.local/share/fonts/NotoSerifDevanagari.ttf || true
-          fc-cache -f ~/.local/share/fonts
-
-      - name: Install Python & Node Dependencies
+      - name: Install Python Dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          npm install
 
       - name: Execute Sacred Cinema Cloud Video Render
         env:
@@ -53,7 +44,7 @@ jobs:
           gh release create "$TAG" render_action_test.mp4 thumb.jpg \
             --title "Render $TAG" \
             --notes "Topic: ${{ github.event.client_payload.topic }}"
-          echo "Release created with tag: $TAG"
+          echo "RELEASE_TAG=$TAG" >> $GITHUB_ENV
 
       - name: Upload Finished MP4 Video as Artifact
         uses: actions/upload-artifact@v4
