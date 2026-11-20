@@ -2,11 +2,6 @@ name: Cloud Video Render Test
 
 on:
   workflow_dispatch:
-    inputs:
-      topic:
-        description: 'Test Topic Title'
-        required: false
-        default: 'Dwarka Mystery Test'
   repository_dispatch:
     types: [render_video]
 
@@ -22,10 +17,11 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install System Dependencies & Indian Fonts
+      - name: Install Devanagari Hindi Font
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg fonts-noto-core fonts-deva
+          mkdir -p ~/.local/share/fonts
+          curl -sL "https://github.com/google/fonts/raw/main/ofl/notosansdevanagari/NotoSansDevanagari%5Bwdth%2Cwght%5D.ttf" -o ~/.local/share/fonts/NotoSansDevanagari.ttf
+          fc-cache -f ~/.local/share/fonts
 
       - name: Install Python Libraries & Playwright Browsers
         run: |

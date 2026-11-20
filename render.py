@@ -23,7 +23,7 @@ HTML_TEMPLATE = """
     height: 1920px;
     background: radial-gradient(circle at 50% 30%, #1a0933, #05010a);
     color: #fff;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Devanagari', sans-serif;
+    font-family: 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -97,33 +97,13 @@ HTML_TEMPLATE = """
 </html>
 """
 
-async def generate_audio():
-    print("🎙️ Generating Hindi TTS...")
+def generate_audio():
+    print("🎙️ Generating Hindi TTS using gTTS...")
     text = "समुद्र की गहराइयों में छुपा है पांच हज़ार साल पुराना सच। भगवान कृष्ण की द्वारका नगरी का यह रहस्य आपको हैरान कर देगा।"
-    
-    # Try Edge TTS first
-    try:
-        import edge_tts
-        communicate = edge_tts.Communicate(text, "hi-IN-MadhurNeural")
-        await communicate.save("audio.mp3")
-        if os.path.exists("audio.mp3") and os.path.getsize("audio.mp3") > 1000:
-            print("✅ audio.mp3 generated via edge-tts.")
-            return
-    except Exception as e:
-        print(f"⚠️ edge-tts warning ({e}), falling back to gTTS...")
-
-    # Robust fallback: Google Translate TTS
-    try:
-        from gtts import gTTS
-        tts = gTTS(text=text, lang="hi", slow=False)
-        tts.save("audio.mp3")
-        print("✅ audio.mp3 generated via gTTS fallback.")
-    except Exception as e:
-        print(f"⚠️ gTTS failed ({e}), generating synthetic sine audio with ffmpeg...")
-        subprocess.run([
-            "ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=440:duration=6",
-            "-c:a", "libmp3lame", "audio.mp3"
-        ], check=True)
+    from gtts import gTTS
+    tts = gTTS(text=text, lang="hi", slow=False)
+    tts.save("audio.mp3")
+    print(f"✅ audio.mp3 generated ({os.path.getsize('audio.mp3')} bytes).")
 
 def get_audio_duration():
     cmd = [
@@ -177,7 +157,7 @@ def encode_video():
 
 async def main():
     start_time = time.time()
-    await generate_audio()
+    generate_audio()
     duration = get_audio_duration()
     print(f"⏱️ Audio duration: {duration:.2f} seconds")
     
