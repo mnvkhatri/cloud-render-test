@@ -17,8 +17,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Devanagari Hindi Font
+      - name: Install System FFmpeg & Devanagari Hindi Font
         run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends ffmpeg
           mkdir -p ~/.local/share/fonts
           curl -sL "https://github.com/google/fonts/raw/main/ofl/notosansdevanagari/NotoSansDevanagari%5Bwdth%2Cwght%5D.ttf" -o ~/.local/share/fonts/NotoSansDevanagari.ttf
           fc-cache -f ~/.local/share/fonts
