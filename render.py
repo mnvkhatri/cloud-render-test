@@ -39,12 +39,26 @@ def generate_voiceover_and_bgm(clean_topic, full_vo):
     tts.save("audio/vo.mp3")
 
     # Probe duration
-    cmd = [
-        "ffprobe", "-v", "error", "-show_entries", "format=duration",
-        "-of", "default=noprint_wrappers=1:nokey=1", "audio/vo.mp3"
-    ]
-    res = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=True)
-    duration = float(res.stdout.strip())
+    duration = 25.0
+    try:
+        cmd = [
+            "ffprobe", "-v", "error", "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1", "audio/vo.mp3"
+        ]
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=True)
+        duration = float(res.stdout.strip())
+    except Exception as e:
+        print(f"Warning: ffprobe failed ({e}), checking ffmpeg -i...")
+        try:
+            res = subprocess.run(["ffmpeg", "-i", "audio/vo.mp3"], stderr=subprocess.PIPE, text=True)
+            for line in res.stderr.splitlines():
+                if "Duration:" in line:
+                    time_str = line.split("Duration:")[1].split(",")[0].strip()
+                    h, m, s = time_str.split(":")
+                    duration = float(h)*3600 + float(m)*60 + float(s)
+                    break
+        except Exception:
+            pass
     print(f"⏱️ Voiceover Duration: {duration:.2f} seconds")
 
     # Synthesize Indian Classical Acoustic BGM (Tanpura + Bells + Pakhawaj)
