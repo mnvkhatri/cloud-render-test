@@ -21,7 +21,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       - name: Install System Dependencies & Indian Fonts
         run: |
@@ -31,7 +30,7 @@ jobs:
       - name: Install Python Libraries & Playwright Browsers
         run: |
           pip install --upgrade pip
-          pip install edge-tts playwright
+          pip install -r requirements.txt
           python -m playwright install --with-deps chromium
 
       - name: Execute Cloud Video Render
