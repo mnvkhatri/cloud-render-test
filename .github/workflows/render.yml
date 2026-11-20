@@ -1,9 +1,12 @@
-name: Cloud Video Render Test
+name: Cloud Video Render
 
 on:
   workflow_dispatch:
   repository_dispatch:
     types: [render_video]
+
+permissions:
+  contents: write
 
 jobs:
   render:
@@ -32,8 +35,20 @@ jobs:
           python -m playwright install --with-deps chromium
 
       - name: Execute Cloud Video Render
+        env:
+          CLIENT_PAYLOAD: ${{ toJson(github.event.client_payload) }}
         run: |
           python render.py
+
+      - name: Create GitHub Release with Video & Thumb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="render-$(date +%s)"
+          gh release create "$TAG" render_action_test.mp4 thumb.jpg \
+            --title "Render $TAG" \
+            --notes "Topic: ${{ github.event.client_payload.topic }}"
+          echo "RELEASE_TAG=$TAG" >> $GITHUB_ENV
 
       - name: Upload Finished MP4 Video as Artifact
         uses: actions/upload-artifact@v4
