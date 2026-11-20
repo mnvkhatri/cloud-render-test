@@ -15,26 +15,31 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install System FFmpeg & Devanagari Hindi Font
+      - name: Install System FFmpeg & Fonts
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y --no-install-recommends ffmpeg
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-core
           mkdir -p ~/.local/share/fonts
-          curl -sL "https://github.com/google/fonts/raw/main/ofl/notosansdevanagari/NotoSansDevanagari%5Bwdth%2Cwght%5D.ttf" -o ~/.local/share/fonts/NotoSansDevanagari.ttf
+          curl -sL "https://github.com/google/fonts/raw/main/ofl/notoserifdevanagari/NotoSerifDevanagari%5Bwght%5D.ttf" -o ~/.local/share/fonts/NotoSerifDevanagari.ttf || true
           fc-cache -f ~/.local/share/fonts
 
-      - name: Install Python Libraries & Playwright Browsers
+      - name: Install Python & Node Dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          python -m playwright install --with-deps chromium
+          npm install
 
-      - name: Execute Cloud Video Render
+      - name: Execute Sacred Cinema Cloud Video Render
         env:
           CLIENT_PAYLOAD: ${{ toJson(github.event.client_payload) }}
         run: |
@@ -48,7 +53,7 @@ jobs:
           gh release create "$TAG" render_action_test.mp4 thumb.jpg \
             --title "Render $TAG" \
             --notes "Topic: ${{ github.event.client_payload.topic }}"
-          echo "RELEASE_TAG=$TAG" >> $GITHUB_ENV
+          echo "Release created with tag: $TAG"
 
       - name: Upload Finished MP4 Video as Artifact
         uses: actions/upload-artifact@v4

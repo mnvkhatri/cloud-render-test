@@ -1,2 +1,2 @@
-gTTS
-playwright
+gTTS>=2.5.0
+requests>=2.28.0
