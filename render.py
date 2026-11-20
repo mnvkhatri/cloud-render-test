@@ -3,7 +3,6 @@ import sys
 import time
 import asyncio
 import subprocess
-import edge_tts
 from playwright.async_api import async_playwright
 
 WIDTH = 1080
@@ -99,11 +98,32 @@ HTML_TEMPLATE = """
 """
 
 async def generate_audio():
-    print("🎙️ Generating Hindi TTS with edge-tts...")
+    print("🎙️ Generating Hindi TTS...")
     text = "समुद्र की गहराइयों में छुपा है पांच हज़ार साल पुराना सच। भगवान कृष्ण की द्वारका नगरी का यह रहस्य आपको हैरान कर देगा।"
-    communicate = edge_tts.Communicate(text, "hi-IN-MadhurNeural")
-    await communicate.save("audio.mp3")
-    print("✅ audio.mp3 generated successfully.")
+    
+    # Try Edge TTS first
+    try:
+        import edge_tts
+        communicate = edge_tts.Communicate(text, "hi-IN-MadhurNeural")
+        await communicate.save("audio.mp3")
+        if os.path.exists("audio.mp3") and os.path.getsize("audio.mp3") > 1000:
+            print("✅ audio.mp3 generated via edge-tts.")
+            return
+    except Exception as e:
+        print(f"⚠️ edge-tts warning ({e}), falling back to gTTS...")
+
+    # Robust fallback: Google Translate TTS
+    try:
+        from gtts import gTTS
+        tts = gTTS(text=text, lang="hi", slow=False)
+        tts.save("audio.mp3")
+        print("✅ audio.mp3 generated via gTTS fallback.")
+    except Exception as e:
+        print(f"⚠️ gTTS failed ({e}), generating synthetic sine audio with ffmpeg...")
+        subprocess.run([
+            "ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=440:duration=6",
+            "-c:a", "libmp3lame", "audio.mp3"
+        ], check=True)
 
 def get_audio_duration():
     cmd = [
