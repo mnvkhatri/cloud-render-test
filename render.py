@@ -561,7 +561,7 @@ def main():
 
     print(f"🎨 Generating {len(scenes)} visual 16:9 cartoon scene artworks via Google Flow...")
     scene_images = [None] * len(scenes)
-    with ThreadPoolExecutor(max_workers=3) as executor:
+    with ThreadPoolExecutor(max_workers=8) as executor:
         futures = {executor.submit(download_flow_image, sc["id"], sc["image_prompt"]): idx for idx, sc in enumerate(scenes)}
         for fut in futures:
             idx = futures[fut]
