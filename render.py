@@ -6,6 +6,7 @@ import math
 import struct
 import wave
 import subprocess
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 SARVAM_DEFAULT_KEY = "sk_y4laizws_uJw1vMXtUnIwgZ35791walZ7"
@@ -23,48 +24,30 @@ def get_audio_duration(path):
                 time_str = line.split("Duration:")[1].split(",")[0].strip()
                 h, m, s = time_str.split(":")
                 return float(h)*3600 + float(m)*60 + float(s)
-        return 10.0
+        return 5.0
 
 def generate_script(topic):
     import requests
-    print(f"🧠 Generating cinematic 4-scene Hindi reel script for: '{topic}'...")
+    print(f"🧠 Generating cinematic 8-scene 2D Cartoon Hindi reel script for: '{topic}'...")
     
-    prompt = f"""You are a master cinematic documentary director for @lostrealmshindi (exploring ancient Indian mysteries, sunken civilizations, and epic lore).
-Create a captivating 4-scene Hindi video reel package for this topic: "{topic}".
-Output ONLY valid JSON with this exact schema (no markdown, no quotes around json):
+    prompt = f"""You are a master animation director for @lostrealmshindi creating a 55-second viral YouTube Short / Instagram Reel.
+Topic: "{topic}".
+Art Style: Vibrant 2D Indian cartoon animation style (clean line art, rich cel shading, modern Amar Chitra Katha & Disney animated film aesthetic, 16:9 widescreen).
+
+Return ONLY valid JSON with this exact schema (no markdown, no quotes around json):
 {{
-  "title": "Hindi Title for YouTube Shorts with #Shorts",
+  "youtube_title": "Shorts Title in Hindi with #Shorts",
+  "header_line_1": "Top Header Line 1 in Hindi (White text)",
+  "header_line_2": "Top Header Line 2 in Hindi (Yellow Highlight text)",
   "scenes": [
     {{
       "id": 1,
-      "badge": "रहस्यमयी द्वारका",
-      "title": "समुद्र में डूबा स्वर्णिम शहर",
-      "voiceover_hi": "हजारों साल पहले, अरब सागर की गहराइयों में एक पूरा शहर समा गया। वो शहर था — द्वारका। भगवान श्रीकृष्ण की स्वर्णिम नगरी!",
-      "image_prompt": "Cinematic 9:16 vertical view of ancient stone temple gates submerged underwater in turquoise ocean with sun rays, 8k photorealistic"
-    }},
-    {{
-      "id": 2,
-      "badge": "पुरातत्व खोज",
-      "title": "9000 साल पुरानी दीवारें",
-      "voiceover_hi": "जब समुद्री पुरातत्वविदों ने गुजरात के तट पर खोज की, तो पानी के नीचे 9000 साल पुरानी विशाल दीवारें और खंभे मिले।",
-      "image_prompt": "Scuba diver marine archaeologist exploring ancient submerged sandstone pillars underwater with flashlight, 9:16 cinematic photorealistic"
-    }},
-    {{
-      "id": 3,
-      "badge": "पौराणिक प्रमाण",
-      "title": "महाभारत का जीवंत सच",
-      "voiceover_hi": "महाभारत में वर्णित द्वारका कोई कल्पना नहीं, बल्कि एक ऐतिहासिक सच था—सोने और चांदी के महलों से सजी एक भव्य नगरी।",
-      "image_prompt": "Glorious underwater view of a sprawling submerged ancient Indian golden city with temple spires on the seabed, 9:16 8k"
-    }},
-    {{
-      "id": 4,
-      "badge": "अनसुलझा रहस्य",
-      "title": "क्या आज भी छिपे हैं दिव्य अस्त्र?",
-      "voiceover_hi": "क्या इस समुद्र में आज भी श्रीकृष्ण के दिव्य अस्त्र और गुप्त खजाने दबे हैं? अपनी राय हमें कमेंट्स में बताएं!",
-      "image_prompt": "Ancient sacred round bronze disk artifact with Sanskrit script half-buried in ocean sand underwater, 9:16 cinematic lighting"
+      "voiceover_hi": "3-4 concise Hindi sentences introducing the big mystery or character.",
+      "image_prompt": "Specific 16:9 widescreen visual description for 2D Indian cartoon animation scene"
     }}
   ]
-}}"""
+}}
+Ensure exactly 8 to 10 sequential scenes, total voiceover length ~50-55 seconds. Consistent character descriptions."""
 
     try:
         res = requests.post(
@@ -73,7 +56,7 @@ Output ONLY valid JSON with this exact schema (no markdown, no quotes around jso
             json={
                 "model": "antigravity",
                 "messages": [
-                    {"role": "system", "content": "You are a professional YouTube Shorts director for @lostrealmshindi. Respond ONLY with valid JSON."},
+                    {"role": "system", "content": "You are a professional animation director for @lostrealmshindi. Respond ONLY with valid JSON."},
                     {"role": "user", "content": prompt}
                 ]
             },
@@ -83,68 +66,96 @@ Output ONLY valid JSON with this exact schema (no markdown, no quotes around jso
         if content.startswith("```"):
             content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
         data = json.loads(content)
-        print("✅ Custom script generated successfully via Antigravity Bridge")
+        print(f"✅ Generated script with {len(data.get('scenes', []))} cartoon scenes")
         return data
     except Exception as e:
-        print(f"⚠️ Script generation error ({e}), using default mythological template for '{topic}'")
+        print(f"⚠️ Script generation error ({e}), using default fallback for '{topic}'")
         return {
-            "title": f"{topic} #Shorts",
+            "youtube_title": f"{topic} #Shorts",
+            "header_line_1": "महाभारत का सबसे",
+            "header_line_2": "शक्तिशाली रहस्य",
             "scenes": [
                 {
                     "id": 1,
-                    "badge": "प्राचीन रहस्य",
-                    "title": topic,
-                    "voiceover_hi": f"हजारों साल पहले, इतिहास के पन्नों में एक ऐसा रहस्य दर्ज हुआ जिसे आज तक कोई नहीं सुलझा सका—{topic}!",
-                    "image_prompt": f"Mystical sacred ancient Indian cinematic temple scene about {topic}, glowing divine light, 9:16 photorealistic 8k"
+                    "voiceover_hi": f"महाभारत का सबसे बड़ा रहस्य क्या था? अर्जुन या कर्ण नहीं, बल्कि एक ऐसा सत्य जो आज भी रोंगटे खड़े कर देता है!",
+                    "image_prompt": f"Epic Kurukshetra war battlefield at sunset with ancient golden war chariots and banners in vibrant 2D Indian cartoon animation style"
                 },
                 {
                     "id": 2,
-                    "badge": "पुरातत्व खोज",
-                    "title": "रहस्यमयी साक्ष्य",
-                    "voiceover_hi": "जब शोधकर्ताओं और पुरातत्वविदों ने गहराई से अध्ययन किया, तो उन्हें ऐसे साक्ष्य मिले जिन्होंने आधुनिक विज्ञान को भी हैरान कर दिया।",
-                    "image_prompt": "Archaeologists investigating ancient mysterious Indian temple stone carvings and inscriptions, 9:16 cinematic lighting"
+                    "voiceover_hi": "प्राचीन ग्रंथों के अनुसार, युद्ध के मैदान में एक ऐसा योद्धा उपस्थित था जिसके तरकश में केवल तीन दिव्य बाण थे।",
+                    "image_prompt": "Close-up of golden quiver holding three divine glowing celestial arrows in vibrant 2D Indian cartoon animation style"
                 },
                 {
                     "id": 3,
-                    "badge": "पौराणिक गाथा",
-                    "title": "प्राचीन ग्रंथों का सच",
-                    "voiceover_hi": "हमारे वेदों और पुराणों में वर्णित यह गाथा मात्र कोई कहानी नहीं, बल्कि उस काल के उन्नत ज्ञान का प्रत्यक्ष प्रमाण है।",
-                    "image_prompt": "Dramatic cosmic visualization of ancient Indian Vedic architecture glowing with golden energy, 9:16 cinematic masterpiece"
+                    "voiceover_hi": "यह थे महाबली बर्बरीक, जिन्होंने माँ कामाख्या की कठोर तपस्या से अमोघ शक्तियों का वरदान प्राप्त किया था।",
+                    "image_prompt": "Young heroic warrior Barbareek in golden armor holding divine bow in vibrant 2D Indian cartoon animation style"
                 },
                 {
                     "id": 4,
-                    "badge": "अंतिम सवाल",
-                    "title": "आपकी क्या राय है?",
-                    "voiceover_hi": "क्या यह केवल संयोग था या किसी प्राचीन अलौकिक शक्ति का चमत्कार? अपनी राय हमें कमेंट्स में बताएं!",
-                    "image_prompt": "Ancient sacred Indian artifact glowing mysteriously in dark stone chamber, 9:16 dramatic lighting"
+                    "voiceover_hi": "उनकी परीक्षा लेने स्वयं भगवान श्रीकृष्ण पीपल के वृक्ष के नीचे आए और एक असंभव चुनौती रखी।",
+                    "image_prompt": "Lord Krishna with peacock crown standing gracefully under sacred giant Peepal tree in vibrant 2D Indian cartoon animation style"
+                },
+                {
+                    "id": 5,
+                    "voiceover_hi": "कान्हा ने कहा: अपने एक ही बाण से इस विशाल पीपल के हर एक पत्ते को छेद कर दिखाओ।",
+                    "image_prompt": "Lord Krishna challenging Barbareek by pointing to tree canopy in vibrant 2D Indian cartoon animation style"
+                },
+                {
+                    "id": 6,
+                    "voiceover_hi": "बर्बरीक का पहला बाण चलते ही हर पत्ते पर लाल निशान लग गया, और बाण कान्हा के पैर पर मंडराने लगा!",
+                    "image_prompt": "Glowing celestial arrow hovering over Krishna's lotus foot with hidden leaf in vibrant 2D Indian cartoon animation style"
+                },
+                {
+                    "id": 7,
+                    "voiceover_hi": "धर्म और संपूर्ण सृष्टि की रक्षा के लिए श्रीकृष्ण ने दान में बर्बरीक का शीश मांग लिया।",
+                    "image_prompt": "Serene smiling crowned head of Barbareek on golden ceremonial platter receiving Krishna's blessing in vibrant 2D Indian cartoon animation style"
+                },
+                {
+                    "id": 8,
+                    "voiceover_hi": "कलयुग में भगवान ने उन्हें खाटू श्याम का अमर स्वरूप दिया। कमेंट में लिखें—जय श्री श्याम!",
+                    "image_prompt": "Grand temple shrine of Khatu Shyam Ji with devotees and glowing oil lamps in vibrant 2D Indian cartoon animation style"
                 }
             ]
         }
 
 def download_flow_image(scene_id, prompt):
     import requests
-    print(f"🎨 Generating Google Flow image for Scene {scene_id}: '{prompt[:60]}...'")
-    out_path = f"scene_{scene_id}.webp"
-    try:
-        res = requests.post(
-            f"{BRIDGE_API_URL}/generate-image",
-            headers={"Content-Type": "application/json"},
-            json={"prompt": prompt, "aspect_ratio": "9:16", "model": "flow"},
-            timeout=120
-        )
-        if res.status_code == 200 and len(res.content) > 1000:
-            with open(out_path, "wb") as f:
-                f.write(res.content)
-            print(f"✅ Scene {scene_id} image ready ({len(res.content)} bytes)")
-            return out_path
-    except Exception as e:
-        print(f"⚠️ Flow image error on scene {scene_id}: {e}")
+    print(f"🎨 Generating 16:9 Google Flow image for Scene {scene_id} via bridge.mnvcloud.online...")
+    out_path = f"scene_{scene_id:02d}.webp"
+    
+    full_prompt = f"Vibrant 2D Indian cartoon animation style, modern Amar Chitra Katha and Disney animated feature film aesthetic, clean sharp linework, rich cel shading, saturated colors, 16:9 widescreen: {prompt}"
+    
+    for attempt in range(1, 4):
+        try:
+            res = requests.post(
+                f"{BRIDGE_API_URL}/generate-image",
+                headers={
+                    "Content-Type": "application/json",
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+                },
+                json={
+                    "prompt": full_prompt,
+                    "aspect_ratio": "16:9",
+                    "model": "flow"
+                },
+                timeout=90
+            )
+            if res.status_code == 200 and len(res.content) > 1000:
+                with open(out_path, "wb") as f:
+                    f.write(res.content)
+                print(f"✅ Scene {scene_id} Flow image ready ({len(res.content)} bytes)")
+                return out_path
+        except Exception as e:
+            print(f"⚠️ Flow image attempt {attempt} failed for Scene {scene_id} ({e})")
+            time.sleep(3)
+            
+    print(f"❌ Failed to download Flow image for Scene {scene_id}")
     return None
 
 def generate_sarvam_audio(scene_id, text, api_key, speaker):
     import requests
     os.makedirs("audio", exist_ok=True)
-    out_path = f"audio/audio_scene_{scene_id}.wav"
+    out_path = f"audio/audio_scene_{scene_id:02d}.wav"
     print(f"🎙️ Generating Sarvam AI voiceover (speaker: {speaker}) for Scene {scene_id}...")
     try:
         res = requests.post(
@@ -157,7 +168,8 @@ def generate_sarvam_audio(scene_id, text, api_key, speaker):
                 "inputs": [text],
                 "target_language_code": "hi-IN",
                 "speaker": speaker,
-                "model": "bulbul:v3"
+                "model": "bulbul:v3",
+                "pace": 1.15
             },
             timeout=30
         )
@@ -166,67 +178,92 @@ def generate_sarvam_audio(scene_id, text, api_key, speaker):
             audio_bytes = base64.b64decode(data["audios"][0])
             with open(out_path, "wb") as f:
                 f.write(audio_bytes)
-            print(f"✅ Scene {scene_id} voiceover generated via Sarvam AI")
+            print(f"✅ Scene {scene_id} Sarvam audio ready")
             return out_path
     except Exception as e:
-        print(f"⚠️ Sarvam AI error on scene {scene_id} ({e}), falling back to gTTS")
-    
+        print(f"⚠️ Sarvam AI error on Scene {scene_id} ({e}), using gTTS fallback")
+
     from gtts import gTTS
     tts = gTTS(text=text, lang="hi", slow=False)
-    mp3_path = f"audio/audio_scene_{scene_id}.mp3"
+    mp3_path = f"audio/audio_scene_{scene_id:02d}.mp3"
     tts.save(mp3_path)
     subprocess.run(["ffmpeg", "-y", "-i", mp3_path, out_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return out_path
 
 def build_composition(script_data, scene_images, scene_audios):
     scenes = script_data["scenes"]
-    timeline = []
-    current_time = 0.5
+    header_1 = script_data.get("header_line_1", "महाभारत का सबसे")
+    header_2 = script_data.get("header_line_2", "शक्तिशाली योद्धा")
     
+    timeline = []
+    current_time = 0.4
     concat_inputs = []
     filter_complex = ""
-    
+    global_word_counter = 0
+
     for idx, sc in enumerate(scenes):
         audio_path = scene_audios[idx]
         dur = get_audio_duration(audio_path)
         start = current_time
         end = start + dur
-        words = sc["voiceover_hi"].split()
-        word_dur = dur / max(len(words), 1)
         
-        words_timing = []
-        for w_i, w in enumerate(words):
-            words_timing.append({
-                "word": w,
-                "start": start + (w_i * word_dur),
-                "end": start + ((w_i + 1) * word_dur)
+        words = sc["voiceover_hi"].split()
+        chunk_size = 6
+        chunks = [words[i:i + chunk_size] for i in range(0, len(words), chunk_size)]
+        chunk_dur = dur / max(len(chunks), 1)
+        
+        scene_chunks = []
+        c_time = start
+        for c_idx, chunk in enumerate(chunks):
+            c_start = c_time
+            c_end = c_time + chunk_dur
+            c_time = c_end
+            
+            w_dur = chunk_dur / max(len(chunk), 1)
+            chunk_words = []
+            for w_idx, w in enumerate(chunk):
+                w_start = c_start + (w_idx * w_dur)
+                w_end = w_start + w_dur
+                global_word_counter += 1
+                chunk_words.append({
+                    "id": f"w_{global_word_counter}",
+                    "text": w,
+                    "start": round(w_start, 2),
+                    "end": round(w_end, 2)
+                })
+            scene_chunks.append({
+                "chunk_id": f"c_{idx}_{c_idx}",
+                "start": round(c_start, 2),
+                "end": round(c_end, 2),
+                "words": chunk_words
             })
             
         timeline.append({
             "scene": sc,
-            "image": scene_images[idx],
-            "start": start,
-            "end": end,
-            "duration": dur,
-            "words": words_timing
+            "id": idx + 1,
+            "image": scene_images[idx] or f"assets_cartoon/scene_{idx+1:02d}.jpg",
+            "start": round(start, 2),
+            "end": round(end, 2),
+            "duration": round(dur, 2),
+            "chunks": scene_chunks
         })
         concat_inputs.extend(["-i", audio_path])
-        filter_complex += f"[{idx}:a]apad=pad_dur=0.5[a{idx}];"
-        current_time = end + 0.5
-        
-    total_duration = current_time + 1.0
-    print(f"⏱️ Composition Timeline: {total_duration:.2f}s total across {len(timeline)} scenes")
-    
+        filter_complex += f"[{idx}:a]apad=pad_dur=0.4[a{idx}];"
+        current_time = end + 0.4
+
+    total_duration = min(round(current_time + 0.5, 2), 56.5)
+    print(f"⏱️ Composition Timeline: {total_duration}s across {len(timeline)} scenes with {global_word_counter} synchronized words")
+
     filter_complex += "".join([f"[a{i}]" for i in range(len(scenes))]) + f"concat=n={len(scenes)}:v=0:a=1[voconcat];"
-    filter_complex += "[voconcat]adelay=500|500[vo_out]"
+    filter_complex += "[voconcat]adelay=400|400[vo_out]"
     subprocess.run(["ffmpeg", "-y"] + concat_inputs + ["-filter_complex", filter_complex, "-map", "[vo_out]", "audio/full_vo.wav"], check=True)
-    
-    print("🎶 Synthesizing Sacred Indian Classical Soundscape (Tanpura + Temple Bells + Pakhawaj)...")
+
+    # Acoustic Soundscape Synthesis (Tanpura + Bronze Temple Bells + Pakhawaj Drum Glides)
     sample_rate = 44100
     num_samples = int(sample_rate * total_duration)
     samples = [0.0] * num_samples
     tanpura_freqs = [220.0, 293.66, 293.66, 146.83]
-    
+
     for t_idx in range(num_samples):
         t = t_idx / sample_rate
         cycle_pos = t % 8.0
@@ -241,7 +278,7 @@ def build_composition(script_data, scene_images, scene_audios):
         )
         drone = 0.25 * math.sin(2 * math.pi * 146.83 * t) + 0.20 * math.sin(2 * math.pi * 73.415 * t)
         samples[t_idx] += (tone * env * 0.35 + drone * 0.25)
-        
+
     scene_start_times = [sc["start"] for sc in timeline]
     for bt in scene_start_times:
         b_start = int(bt * sample_rate)
@@ -249,22 +286,19 @@ def build_composition(script_data, scene_images, scene_audios):
         for i in range(b_len):
             if b_start + i >= num_samples: break
             t_bell = i / sample_rate
-            b_env = math.exp(-t_bell * 1.2)
             bell = (
                 0.40 * math.sin(2 * math.pi * 587.33 * t_bell) * math.exp(-t_bell * 0.8) +
                 0.30 * math.sin(2 * math.pi * 1185.0 * t_bell) * math.exp(-t_bell * 1.5)
-            ) * b_env * 0.35
+            ) * math.exp(-t_bell * 1.2) * 0.35
             samples[b_start + i] += bell
 
-    for pt in scene_start_times:
-        p_start = int(pt * sample_rate)
         p_len = int(0.7 * sample_rate)
         for i in range(p_len):
-            if p_start + i >= num_samples: break
+            if b_start + i >= num_samples: break
             t_p = i / sample_rate
             f_glide = 55.0 + 40.0 * (1.0 - t_p / 0.7)
             drum = math.sin(2 * math.pi * f_glide * t_p) * math.exp(-t_p * 6.0) * 0.35
-            samples[p_start + i] += drum
+            samples[b_start + i] += drum
 
     max_amp = max(max(abs(s) for s in samples), 0.001)
     norm = [s / max_amp * 0.75 for s in samples]
@@ -274,117 +308,81 @@ def build_composition(script_data, scene_images, scene_audios):
         wf.setframerate(sample_rate)
         wf.writeframes(struct.pack(f"<{len(norm)}h", *[int(max(-32767, min(32767, s * 32767))) for s in norm]))
 
-    print("🎚️ Master mixing full voiceover + acoustic soundbed at -14 LUFS...")
     cmd_mix = [
         "ffmpeg", "-y", "-i", "audio/full_vo.wav", "-i", "audio/bgm.wav",
-        "-filter_complex", "[1:a]volume=0.22[bgm];[0:a][bgm]amix=inputs=2:duration=first,loudnorm=I=-14:LRA=7:tp=-1.5[out]",
+        "-filter_complex", "[1:a]volume=0.20[bgm];[0:a][bgm]amix=inputs=2:duration=first,loudnorm=I=-14:LRA=7:tp=-1.5[out]",
         "-map", "[out]", "-c:a", "libmp3lame", "-b:a", "192k", "audio/mix.mp3"
     ]
     subprocess.run(cmd_mix, check=True)
-    print("✅ audio/mix.mp3 mastered successfully")
+    print("✅ audio/mix.mp3 mastered at -14 LUFS")
 
-    scenes_html = ""
-    for idx, sc_data in enumerate(timeline):
-        sc = sc_data["scene"]
-        img_src = sc_data["image"]
-        words_spans = " ".join([
-            f'<span class="k-word" id="kw_{idx}_{w_i}">{w["word"]}</span>'
-            for w_i, w in enumerate(sc_data["words"])
-        ])
-        
-        scenes_html += f"""
-    <!-- Scene {idx + 1} -->
-    <div class="scene-layer" id="scene_{idx}">
-      <img class="scene-bg" id="bg_{idx}" src="{img_src}" alt="Scene {idx + 1}" data-layout-allow-overflow="true" />
-      <div class="scene-vignette"></div>
-      
-      <!-- Scene Top Plaque -->
-      <div class="top-plaque" id="plaque_{idx}" data-layout-allow-safe-zone="true">
-        <div class="channel-pill">★ LOST REALMS HINDI</div>
-        <div class="scene-badge">{sc["badge"]}</div>
-        <div class="scene-title">{sc["title"]}</div>
-      </div>
+    # Images HTML
+    images_html = ""
+    for sc in timeline:
+        images_html += f'    <img class="scene-frame" id="scene-{sc["id"]}" src="{sc["image"]}" alt="Scene {sc["id"]}">\n'
 
-      <!-- Scene Subtitle Card -->
-      <div class="sub-card-wrap" id="sub_wrap_{idx}" data-layout-allow-safe-zone="true">
-        <div class="sub-card">
-          <div class="sub-text-flow">
-            {words_spans}
-          </div>
-        </div>
-      </div>
-    </div>
-"""
+    # Captions HTML
+    captions_html = ""
+    for sc in timeline:
+        for chunk in sc["chunks"]:
+            captions_html += f'    <div class="caption-chunk" id="{chunk["chunk_id"]}">\n'
+            for w in chunk["words"]:
+                captions_html += f'      <span class="caption-word" id="{w["id"]}">{w["text"]}</span>\n'
+            captions_html += '    </div>\n'
 
+    # GSAP Timelines
     gsap_script = f"""
-    gsap.registerPlugin();
     const tl = gsap.timeline({{ paused: true }});
     window.__timelines = {{ main: tl }};
-"""
+    const timelineData = {json.dumps(timeline, ensure_ascii=False)};
 
-    for idx, sc_data in enumerate(timeline):
-        s_start = sc_data["start"]
-        s_end = sc_data["end"]
-        s_dur = sc_data["duration"]
-        
-        gsap_script += f"""
-    // SCENE {idx + 1}
-    tl.to("#scene_{idx}", {{ opacity: 1, duration: 0.5 }}, {max(0, s_start - 0.3):.2f});
-    tl.fromTo("#bg_{idx}", 
-      {{ scale: 1.0, y: 0 }}, 
-      {{ scale: 1.12, y: -25, duration: {s_dur + 0.8:.2f}, ease: "none" }}, 
-      {max(0, s_start - 0.3):.2f}
-    );
-    tl.fromTo("#plaque_{idx}", 
-      {{ opacity: 0, y: -30 }}, 
-      {{ opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }}, 
-      {s_start:.2f}
-    );
-    tl.fromTo("#sub_wrap_{idx}", 
-      {{ opacity: 0, y: 20 }}, 
-      {{ opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }}, 
-      {s_start:.2f}
-    );
-"""
-        for w_i, w in enumerate(sc_data["words"]):
-            w_start = w["start"]
-            w_end = w["end"]
-            gsap_script += f"""
-    tl.to("#kw_{idx}_{w_i}", {{ color: "#ffdf00", textShadow: "0 0 16px rgba(255, 215, 0, 0.8)", scale: 1.08, duration: 0.1 }}, {w_start:.2f});
-    tl.to("#kw_{idx}_{w_i}", {{ color: "#ffffff", textShadow: "none", scale: 1.0, duration: 0.1 }}, {w_end:.2f});
-"""
+    timelineData.forEach((sc, index) => {{
+      const imgEl = `#scene-${{sc.id}}`;
+      tl.to(imgEl, {{ autoAlpha: 1, duration: 0.35, ease: "power1.out" }}, sc.start);
+      
+      const scaleTo = 1.08 + (index % 3) * 0.03;
+      const xTo = (index % 2 === 0 ? 1 : -1) * 20;
+      tl.fromTo(imgEl, 
+        {{ scale: 1.0, x: 0 }}, 
+        {{ scale: scaleTo, x: xTo, duration: sc.duration, ease: "none" }}, 
+        sc.start
+      );
 
-        if idx < len(timeline) - 1:
-            gsap_script += f"""
-    tl.to("#scene_{idx}", {{ opacity: 0, duration: 0.5 }}, {s_end:.2f});
-"""
-        else:
-            gsap_script += f"""
-    tl.to("#scene_{idx}", {{ opacity: 1, duration: 1.0 }}, {total_duration - 1.0:.2f});
+      if (index < timelineData.length - 1) {{
+        tl.to(imgEl, {{ autoAlpha: 0, duration: 0.3, ease: "power1.in" }}, sc.end - 0.25);
+      }}
+
+      sc.chunks.forEach((chunk) => {{
+        const cId = `#${{chunk.chunk_id}}`;
+        tl.to(cId, {{ autoAlpha: 1, duration: 0.2, ease: "power1.out" }}, chunk.start);
+        tl.to(cId, {{ autoAlpha: 0, duration: 0.2, ease: "power1.in" }}, chunk.end - 0.15);
+
+        chunk.words.forEach((w) => {{
+          const wId = `#${{w.id}}`;
+          tl.to(wId, {{ className: "caption-word active", duration: 0.1 }}, w.start);
+          tl.to(wId, {{ className: "caption-word", duration: 0.1 }}, w.end);
+        }});
+      }});
+    }});
 """
 
     html = f"""<!doctype html>
-<html lang="hi" data-resolution="portrait">
+<html lang="hi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=1080, height=1920" />
-  <title>Lost Realms Hindi - {script_data.get("title", "")}</title>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+  <meta charset="utf-8">
+  <title>Lost Realms Hindi - {script_data.get("youtube_title", "")}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Serif+Devanagari:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Noto+Sans+Devanagari:wght@700;800;900&family=Noto+Serif+Devanagari:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <style>
-    * {{
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }}
-    html, body {{
+    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    body, html {{
       width: 1080px;
       height: 1920px;
       overflow: hidden;
-      background: #04090f;
-      font-family: 'Noto Serif Devanagari', 'Cinzel', serif;
+      background: #090503;
+      font-family: 'Noto Sans Devanagari', sans-serif;
       -webkit-font-smoothing: antialiased;
     }}
     #stage {{
@@ -392,137 +390,147 @@ def build_composition(script_data, scene_images, scene_audios):
       width: 1080px;
       height: 1920px;
       overflow: hidden;
-      background: #04090f;
+      background: radial-gradient(circle at 50% 50%, #1a0d08 0%, #0d0604 60%, #050201 100%);
     }}
-    .scene-layer {{
+    .ambient-glow {{
       position: absolute;
       top: 0;
       left: 0;
       width: 1080px;
       height: 1920px;
-      opacity: 0;
+      pointer-events: none;
+      z-index: 2;
+      background: radial-gradient(circle at 50% 42%, rgba(255, 170, 0, 0.08) 0%, transparent 65%);
+    }}
+    .top-header {{
+      position: absolute;
+      top: 130px;
+      left: 0;
+      width: 1080px;
+      text-align: center;
+      z-index: 10;
+    }}
+    .channel-tag {{
+      display: inline-block;
+      font-family: 'Cinzel', serif;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 5px;
+      color: #ffd700;
+      background: rgba(35, 12, 6, 0.85);
+      border: 1.5px solid rgba(212, 175, 55, 0.6);
+      border-radius: 20px;
+      padding: 6px 28px;
+      margin-bottom: 22px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+      text-transform: uppercase;
+    }}
+    .main-title {{
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-size: 68px;
+      font-weight: 900;
+      line-height: 1.22;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }}
+    .title-white {{
+      color: #ffffff;
+      text-shadow: 0 5px 25px rgba(0, 0, 0, 0.95), 0 2px 4px rgba(0,0,0,0.8);
+    }}
+    .title-yellow {{
+      color: #ffd700;
+      text-shadow: 0 0 30px rgba(255, 215, 0, 0.6), 0 5px 25px rgba(0, 0, 0, 0.95);
+    }}
+    .viewport-16-9 {{
+      position: absolute;
+      top: 490px;
+      left: 0;
+      width: 1080px;
+      height: 608px;
       overflow: hidden;
+      z-index: 5;
+      background: #000000;
+      border-top: 3.5px solid #d4af37;
+      border-bottom: 3.5px solid #d4af37;
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.95);
     }}
-    .scene-bg {{
+    .scene-frame {{
       position: absolute;
       top: 0;
       left: 0;
       width: 1080px;
-      height: 1920px;
+      height: 608px;
       object-fit: cover;
+      opacity: 0;
+      visibility: hidden;
       transform-origin: center center;
     }}
-    .scene-vignette {{
+    .captions-wrapper {{
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 1080px;
-      height: 1920px;
-      background: radial-gradient(circle at center, transparent 35%, rgba(0,0,0,0.55) 75%, rgba(0,0,0,0.9) 100%),
-                  linear-gradient(180deg, rgba(0,0,0,0.75) 0%, transparent 20%, transparent 60%, rgba(0,0,0,0.9) 100%);
-      pointer-events: none;
-    }}
-    .top-valence {{
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 1080px;
-      height: 110px;
-      z-index: 50;
-      pointer-events: none;
-    }}
-    .bottom-valence {{
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 1080px;
-      height: 90px;
-      z-index: 50;
-      pointer-events: none;
-      transform: rotate(180deg);
-    }}
-    .top-plaque {{
-      position: absolute;
-      top: 180px;
-      left: 60px;
-      right: 60px;
+      bottom: 250px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 940px;
+      min-height: 160px;
+      z-index: 10;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      z-index: 40;
-    }}
-    .channel-pill {{
-      background: linear-gradient(135deg, #1c150c, #2d2215);
-      border: 2px solid #e0a93b;
-      color: #ffd700;
-      font-family: 'Cinzel', serif;
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: 3px;
-      padding: 8px 30px;
-      border-radius: 30px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.7), inset 0 0 10px rgba(224,169,59,0.3);
-      margin-bottom: 12px;
-    }}
-    .scene-badge {{
-      color: #ff9800;
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.9);
-      margin-bottom: 6px;
-    }}
-    .scene-title {{
-      color: #ffffff;
-      font-size: 40px;
-      font-weight: 900;
-      text-shadow: 0 3px 12px rgba(0,0,0,0.9), 0 0 25px rgba(212,175,55,0.4);
       text-align: center;
-      line-height: 1.25;
     }}
-    .sub-card-wrap {{
+    .caption-chunk {{
       position: absolute;
-      bottom: 260px;
-      left: 50px;
-      right: 50px;
-      z-index: 40;
-    }}
-    .sub-card {{
-      background: rgba(10, 16, 24, 0.88);
-      border: 2px solid #d4af37;
-      border-radius: 20px;
-      padding: 24px 30px;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.85), inset 0 0 20px rgba(212,175,55,0.2);
-      backdrop-filter: blur(12px);
-    }}
-    .sub-text-flow {{
-      color: #e0e0e0;
-      font-size: 38px;
+      width: 100%;
+      opacity: 0;
+      visibility: hidden;
+      font-family: 'Noto Serif Devanagari', serif;
+      font-size: 42px;
+      line-height: 1.45;
       font-weight: 700;
-      line-height: 1.5;
-      text-align: center;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 12px 16px;
+      padding: 16px 28px;
+      background: rgba(14, 5, 2, 0.88);
+      border: 2px solid rgba(212, 175, 55, 0.5);
+      border-radius: 24px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(8px);
     }}
-    .k-word {{
+    .caption-word {{
       display: inline-block;
-      margin: 0 5px;
-      color: #ffffff;
+      color: #e0d5c5;
+      transition: color 0.15s ease, transform 0.15s ease;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+    }}
+    .caption-word.active {{
+      color: #ffd700;
+      font-weight: 900;
+      transform: scale(1.14);
+      text-shadow: 0 0 22px rgba(255, 215, 0, 0.85), 0 2px 6px rgba(0,0,0,0.9);
     }}
   </style>
 </head>
 <body>
-  <div id="stage" data-composition-id="main" data-width="1080" data-height="1920">
-    <audio id="master_audio" src="audio/mix.mp3" preload="auto"></audio>
-    <svg class="top-valence" viewBox="0 0 1080 110" preserveAspectRatio="none">
-      <path d="M0,0 L1080,0 L1080,45 Q1020,80 960,45 Q900,80 840,45 Q780,80 720,45 Q660,80 600,45 Q540,80 480,45 Q420,80 360,45 Q300,80 240,45 Q180,80 120,45 Q60,80 0,45 Z" fill="#421010" stroke="#d4af37" stroke-width="3"/>
-    </svg>
-    <svg class="bottom-valence" viewBox="0 0 1080 110" preserveAspectRatio="none">
-      <path d="M0,0 L1080,0 L1080,45 Q1020,80 960,45 Q900,80 840,45 Q780,80 720,45 Q660,80 600,45 Q540,80 480,45 Q420,80 360,45 Q300,80 240,45 Q180,80 120,45 Q60,80 0,45 Z" fill="#421010" stroke="#d4af37" stroke-width="3"/>
-    </svg>
-
-    {scenes_html}
+  <div id="stage" data-composition-id="main" data-width="1080" data-height="1920" data-duration="{total_duration}">
+    <div class="ambient-glow"></div>
+    <div class="top-header" data-layout-allow-safe-zone>
+      <div class="channel-tag">&#9733; LOST REALMS HINDI &#9733;</div>
+      <h1 class="main-title">
+        <span class="title-white">{header_1}</span><br>
+        <span class="title-yellow">{header_2}</span>
+      </h1>
+    </div>
+    <div class="viewport-16-9" data-layout-allow-overflow>
+{images_html}
+    </div>
+    <div class="captions-wrapper" data-layout-allow-overlap>
+{captions_html}
+    </div>
+    <audio id="master_audio" src="audio/mix.mp3" data-start="0" data-duration="{total_duration}" preload="auto"></audio>
   </div>
-
   <script>
 {gsap_script}
   </script>
@@ -531,10 +539,10 @@ def build_composition(script_data, scene_images, scene_audios):
 """
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✅ Sacred Cinema Multi-Scene index.html generated successfully!")
+    print("✅ Modern 2D Cartoon Reel index.html generated successfully!")
 
 def main():
-    print("🚀 Starting Sacred Cinema Cloud Video Render...")
+    print("🚀 Starting @lostrealmshindi Cloud Video Render Pipeline...")
     client_payload = {}
     if "CLIENT_PAYLOAD" in os.environ and os.environ["CLIENT_PAYLOAD"].strip():
         try:
@@ -542,22 +550,22 @@ def main():
         except Exception:
             pass
 
-    topic = client_payload.get("topic") or "समुद्र की गहराइयों में छुपा द्वारका का रहस्य"
+    topic = client_payload.get("topic") or "महाभारत का सबसे शक्तिशाली योद्धा: महाबली बर्बरीक"
     sarvam_key = client_payload.get("sarvam_api_key") or SARVAM_DEFAULT_KEY
     sarvam_speaker = client_payload.get("sarvam_speaker") or SARVAM_DEFAULT_SPEAKER
     
     script_data = generate_script(topic)
     scenes = script_data["scenes"]
 
-    print(f"🎨 Generating {len(scenes)} visual scene artworks in parallel via Google Flow...")
+    print(f"🎨 Generating {len(scenes)} visual 16:9 cartoon scene artworks via Google Flow...")
     scene_images = [None] * len(scenes)
-    with ThreadPoolExecutor(max_workers=4) as executor:
+    with ThreadPoolExecutor(max_workers=3) as executor:
         futures = {executor.submit(download_flow_image, sc["id"], sc["image_prompt"]): idx for idx, sc in enumerate(scenes)}
         for fut in futures:
             idx = futures[fut]
             scene_images[idx] = fut.result()
 
-    print(f"🎙️ Generating voiceover for {len(scenes)} scenes via Sarvam AI (Mani)...")
+    print(f"🎙️ Generating voiceover for {len(scenes)} scenes via Sarvam AI ({sarvam_speaker})...")
     scene_audios = []
     for sc in scenes:
         audio_file = generate_sarvam_audio(sc["id"], sc["voiceover_hi"], sarvam_key, sarvam_speaker)
@@ -565,14 +573,14 @@ def main():
 
     build_composition(script_data, scene_images, scene_audios)
 
-    print("🎬 Rendering 1080x1920 24fps vertical video composition via HyperFrames...")
-    cmd_render = ["npx", "-y", "hyperframes", "render", "-o", "render_action_test.mp4", "--fps", "24", "-q", "draft"]
+    print("🎬 Rendering 1080x1920 30fps vertical video composition via HyperFrames...")
+    cmd_render = ["npx", "-y", "hyperframes", "render", "-o", "render_action_test.mp4", "--fps", "30", "-q", "standard"]
     subprocess.run(cmd_render, check=True)
 
     print("📸 Extracting video thumbnail (thumb.jpg)...")
     cmd_thumb = ["ffmpeg", "-y", "-ss", "00:00:04", "-i", "render_action_test.mp4", "-vframes", "1", "-q:v", "2", "thumb.jpg"]
     subprocess.run(cmd_thumb, check=True)
-    print("🎉 Complete Sacred Cinema Video Rendered & Saved!")
+    print("🎉 Complete @lostrealmshindi Reel Rendered & Saved!")
 
 if __name__ == "__main__":
     main()
