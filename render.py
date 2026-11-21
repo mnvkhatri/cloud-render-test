@@ -26,11 +26,52 @@ def get_audio_duration(path):
                 return float(h)*3600 + float(m)*60 + float(s)
         return 5.0
 
-def generate_script(topic):
+def generate_script(topic, video_type="short"):
     import requests
-    print(f"🧠 Generating cinematic 8-scene screenplay for: '{topic}'...")
+    is_long = (video_type == "long_video")
+    print(f"🧠 Generating screenplay for '{topic}' (format: {'16:9 Long Video' if is_long else '9:16 Short'})...")
     
-    prompt = f"""You are a master viral animation director and financial educator for @FinHackHindi creating a 52-second YouTube Short / Instagram Reel.
+    if is_long:
+        prompt = f"""You are a master viral animation director and financial educator for @FinHackHindi creating a full-length 16:9 widescreen YouTube video breakdown.
+Topic: "{topic}".
+Visual Style: Modern 2D vector cartoon financial illustration style, clean vibrant graphic novel aesthetic, sharp bold linework, rich saturated colors, 16:9 widescreen.
+
+CRITICAL SCRIPT CONSTRAINTS:
+1. Divide into EXACTLY 10 sequential scenes (approx 16-22 Hindi words per scene).
+2. Total duration will be around 1.5 to 2.5 minutes of high-density financial education.
+3. Each scene MUST have:
+   - "id": scene number (1 to 10)
+   - "voiceover_hi": EXACTLY 1 clear, punchy, authoritative Hindi sentence (16-22 words max). Explain the strategy, math, or psychological secret in crisp conversational Hindi.
+   - "image_prompt": A unique, distinct 16:9 visual description featuring the specific financial scenario/characters/action of this moment in modern 2D cartoon financial graphic style (e.g., contrasting two people, compounding graph, portfolio asset allocation pie, salary budgeting envelopes, real estate vs mutual funds, digital app screen).
+4. The story arc must follow:
+   - Scene 1: The bold hook & counter-intuitive truth.
+   - Scene 2-3: The hidden trap or why 95% of people remain middle-class.
+   - Scene 4-5: The math / framework breakdown (e.g. 50-30-20, Rule of 72, index fund compounding, emergency fund rule).
+   - Scene 6-7: Step-by-step actionable plan with concrete numbers.
+   - Scene 8-9: Real-world compounding milestones (Age 20 vs 25 vs 30).
+   - Scene 10: Powerful summary, call to subscribe to @FinHackHindi and take action today.
+5. Provide high-CTR thumbnail elements:
+   - "youtube_title": Catchy YouTube Title in Hindi & English (e.g. "... | Fin Hack Hindi")
+   - "header_line_1": Punchy Main Title Line 1 (White text on thumbnail, max 4-6 words)
+   - "header_line_2": Highlighted Title Line 2 (Yellow text on thumbnail, max 3-5 words)
+   - "stat_badge": High-impact thumbnail metric badge (e.g. "₹0 से ₹1 करोड़ रोडमैप", "100% प्रैक्टिकल फॉर्मूला")
+
+Return ONLY valid JSON with this exact schema (no markdown, no quotes around json):
+{{
+  "youtube_title": "Full YouTube Video Title",
+  "header_line_1": "Top Hook Line 1",
+  "header_line_2": "Highlight Line 2",
+  "stat_badge": "Key Metric Badge",
+  "scenes": [
+    {{
+      "id": 1,
+      "voiceover_hi": "One punchy sentence in Hindi (18 words).",
+      "image_prompt": "Unique visual description for scene 1"
+    }}
+  ]
+}}"""
+    else:
+        prompt = f"""You are a master viral animation director and financial educator for @FinHackHindi creating a 52-second YouTube Short / Instagram Reel.
 Topic: "{topic}".
 Visual Style: Modern 2D vector cartoon financial illustration style, clean vibrant graphic novel aesthetic, sharp bold linework, rich saturated colors, 16:9 widescreen.
 
@@ -43,17 +84,23 @@ CRITICAL SCRIPT CONSTRAINTS:
    - "voiceover_hi": EXACTLY 1 concise, punchy, dramatic Hindi sentence (10-14 words max). Explain money, math, rules, or secrets in simple Hindi terms anyone can understand.
    - "image_prompt": A unique, distinct 16:9 visual description featuring the specific financial scenario/characters/action of this moment in modern 2D cartoon financial graphic style (e.g., contrasting two people, piggy bank compounding, stock chart, credit card trap, bank vault, currency notes).
 5. The story arc must follow the viral financial framework:
-   - Scene 1: Hard-hitting hook question or shocking money reality ("क्या आप जानते हैं...").
+   - Scene 1: Hard-hitting hook question or shocking money reality.
    - Scene 2-3: The common mistake or problem that keeps 95% of people broke.
-   - Scene 4-6: The mathematical secret, hack, or exact rule (e.g. 15-15-15, Rule of 72, 50-30-20, Tax loophole).
-   - Scene 7: Real-world result (how ₹15,000 becomes ₹1 Crore or how much money is saved).
-   - Scene 8: Punchy actionable advice and call to action ("फॉलो करें Fin Hack Hindi और कमेंट में लिखें...!").
+   - Scene 4-6: The mathematical secret, hack, or exact rule.
+   - Scene 7: Real-world result (e.g. compounding milestone or money saved).
+   - Scene 8: Punchy actionable advice and call to action ("सब्सक्राइब करें Fin Hack Hindi").
+6. Provide thumbnail elements:
+   - "youtube_title": Shorts Title in Hindi with #Shorts #FinHackHindi
+   - "header_line_1": Top Hook Line 1 (White)
+   - "header_line_2": Top Hook Line 2 (Yellow)
+   - "stat_badge": Key Metric Badge (e.g. "₹15,000 से ₹1 करोड़")
 
 Return ONLY valid JSON with this exact schema (no markdown, no quotes around json):
 {{
   "youtube_title": "Shorts Title in Hindi with #Shorts #FinHackHindi",
-  "header_line_1": "Top Hook Line 1 (White)",
-  "header_line_2": "Top Hook Line 2 (Yellow)",
+  "header_line_1": "Top Hook Line 1",
+  "header_line_2": "Highlight Line 2",
+  "stat_badge": "Key Metric Badge",
   "scenes": [
     {{
       "id": 1,
@@ -86,48 +133,59 @@ Return ONLY valid JSON with this exact schema (no markdown, no quotes around jso
     except Exception as e:
         print(f"⚠️ Script generation error ({e}), using default fallback for '{topic}'")
         return {
-            "youtube_title": f"{topic} #Shorts #FinHackHindi",
-            "header_line_1": "15-15-15 का जादुई नियम",
-            "header_line_2": "₹15,000 से ₹1 करोड़",
+            "youtube_title": f"{topic} | Fin Hack Hindi",
+            "header_line_1": "अमीर बनने का",
+            "header_line_2": "मास्टरप्लान",
+            "stat_badge": "₹0 से ₹1 करोड़ रोडमैप",
             "scenes": [
                 {
                     "id": 1,
-                    "voiceover_hi": "क्या केवल ₹15,000 महीने की बचत से कोई आम इंसान करोड़पति बन सकता है?",
-                    "image_prompt": "Modern 2D cartoon illustration of a salaried young Indian man looking thoughtfully at his smartphone showing salary credit"
+                    "voiceover_hi": "क्या केवल सही वित्तीय योजना और अनुशासन से कोई भी आम इंसान 30 की उम्र तक करोड़पति बन सकता है?",
+                    "image_prompt": "Modern 2D cartoon illustration of a salaried young Indian man looking thoughtfully at his smartphone showing growing investments"
                 },
                 {
                     "id": 2,
-                    "voiceover_hi": "ज़्यादातर लोग सोचते हैं कि अमीर बनने के लिए लाखों की सैलरी या कोई चमत्कार चाहिए।",
-                    "image_prompt": "2D cartoon animation of ordinary people in a bank queue watching gold coins and banknotes slipping away"
+                    "voiceover_hi": "ज़्यादातर लोग अपनी 20s में सारी सैलरी महंगे गैजेट्स और लाइफस्टाइल पर खर्च कर देते हैं।",
+                    "image_prompt": "2D cartoon animation of ordinary people spending banknotes on shopping bags while savings drain away"
                 },
                 {
                     "id": 3,
-                    "voiceover_hi": "लेकिन अमीर लोग इस्तेमाल करते हैं यह सीक्रेट फॉर्मूला—15-15-15 का कंपाउंडिंग नियम!",
-                    "image_prompt": "Vibrant 2D graphic of glowing neon numbers 15-15-15 surrounded by green profit arrows and golden coins"
+                    "voiceover_hi": "लेकिन अमीर लोग सबसे पहले अपने पैसे को काम पर लगाते हैं ताकि पैसा उनके लिए कमा सके।",
+                    "image_prompt": "Vibrant 2D graphic of smart investor relaxing while digital money gears and golden coins compound automatically"
                 },
                 {
                     "id": 4,
-                    "voiceover_hi": "पहला 15: आपको हर महीने एक अच्छे इंडेक्स फंड या म्यूचुअल फंड में ₹15,000 की SIP करनी है।",
-                    "image_prompt": "2D vector cartoon of an automated smartphone investment app watering a glowing digital money tree"
+                    "voiceover_hi": "पहला नियम: 50-30-20 का बजट फॉर्मूला अपनाएं, जहां 20 प्रतिशत पैसा हर महीने निवेश में जाना अनिवार्य है।",
+                    "image_prompt": "2D vector cartoon of an automated smartphone budgeting app dividing salary into three colorful glowing buckets"
                 },
                 {
                     "id": 5,
-                    "voiceover_hi": "दूसरा 15: आपको सालाना कम से कम 15 प्रतिशत का अनुमानित रिटर्न मिलना चाहिए।",
-                    "image_prompt": "2D cartoon financial stock chart curving steeply upwards with bull horns and percentage symbols"
+                    "voiceover_hi": "दूसरा नियम: कम से कम 6 महीने के खर्चों का इमरजेंसी फंड लिक्विड फंड या फिक्स्ड डिपॉजिट में तैयार रखें।",
+                    "image_prompt": "2D cartoon of a glowing safety shield protecting family savings vault from financial rain and storms"
                 },
                 {
                     "id": 6,
-                    "voiceover_hi": "और तीसरा 15: आपको इस निवेश को बिना रुके लगातार 15 सालों तक जारी रखना है।",
-                    "image_prompt": "2D cartoon calendar pages flipping rapidly with a golden clock symbolizing patient disciplined compounding"
+                    "voiceover_hi": "तीसरा नियम: निफ्टी 50 या बड़े इंडेक्स फंड्स में बिना रुके हर महीने अनुशासित SIP शुरू करें।",
+                    "image_prompt": "2D cartoon financial stock chart curving steeply upwards with bull horns and percentage symbols"
                 },
                 {
                     "id": 7,
-                    "voiceover_hi": "15 साल बाद आपके कुल जमा 27 लाख बढ़कर पूरे 1 करोड़ 2 लाख रुपए बन जाएंगे!",
-                    "image_prompt": "2D cartoon of an open golden bank vault overflowing with glowing Indian currency bundles and a 1 Crore milestone sign"
+                    "voiceover_hi": "चौथा नियम: कभी भी हाई-इंटरेस्ट क्रेडिट कार्ड डेट या पर्सनल लोन के जाल में न फंसें।",
+                    "image_prompt": "2D cartoon of cutting up high interest credit cards with scissors liberating golden coins"
                 },
                 {
                     "id": 8,
-                    "voiceover_hi": "स्मार्ट मनी हैक्स के लिए सब्सक्राइब करें Fin Hack Hindi, और अपनी SIP आज ही शुरू करें!",
+                    "voiceover_hi": "कंपाउंडिंग का जादू समय के साथ काम करता है—जितनी जल्दी शुरुआत, उतना विशाल वेल्थ क्रिएशन!",
+                    "image_prompt": "2D cartoon calendar pages flipping rapidly with a golden money tree growing into massive wealth"
+                },
+                {
+                    "id": 9,
+                    "voiceover_hi": "10 सालों में यही छोटा सा अनुशासन आपके बैंक बैलेंस को करोड़ों के मुकाम पर पहुंचा देगा।",
+                    "image_prompt": "2D cartoon of an open golden bank vault overflowing with glowing Indian currency bundles and a 1 Crore milestone sign"
+                },
+                {
+                    "id": 10,
+                    "voiceover_hi": "स्मार्ट मनी हैक्स और वेल्थ क्रिएशन के लिए अभी सब्सक्राइब करें Fin Hack Hindi, और अपनी वेल्थ जर्नी आज ही शुरू करें!",
                     "image_prompt": "Hero character smiling confidently pointing at a golden subscribe bell button in 2D cartoon style"
                 }
             ]
@@ -164,7 +222,6 @@ def download_flow_image(scene_id, prompt):
     
     for attempt in range(1, 4):
         try:
-            # Unique dynamic seed prevents bridge backend caching or race collisions
             seed = int(time.time() * 1000) % 999999 + scene_id * 1013
             res = requests.post(
                 f"{BRIDGE_API_URL}/generate-image",
@@ -231,10 +288,15 @@ def generate_sarvam_audio(scene_id, text, api_key, speaker):
     subprocess.run(["ffmpeg", "-y", "-i", mp3_path, out_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return out_path
 
-def build_composition(script_data, scene_images, scene_audios):
+def build_composition(script_data, scene_images, scene_audios, video_type="short"):
+    is_long = (video_type == "long_video")
     scenes = script_data["scenes"]
-    header_1 = script_data.get("header_line_1", "महाभारत का सबसे")
-    header_2 = script_data.get("header_line_2", "शक्तिशाली योद्धा")
+    header_1 = script_data.get("header_line_1", "अमीर बनने का")
+    header_2 = script_data.get("header_line_2", "मास्टरप्लान")
+    stat_badge = script_data.get("stat_badge", "₹0 से ₹1 करोड़ रोडमैप")
+    
+    width = 1920 if is_long else 1080
+    height = 1080 if is_long else 1920
     
     timeline = []
     current_time = 0.4
@@ -249,7 +311,7 @@ def build_composition(script_data, scene_images, scene_audios):
         end = start + dur
         
         words = sc["voiceover_hi"].split()
-        chunk_size = 6
+        chunk_size = 7 if is_long else 6
         chunks = [words[i:i + chunk_size] for i in range(0, len(words), chunk_size)]
         chunk_dur = dur / max(len(chunks), 1)
         
@@ -292,8 +354,8 @@ def build_composition(script_data, scene_images, scene_audios):
         filter_complex += f"[{idx}:a]apad=pad_dur=0.25[a{idx}];"
         current_time = end + 0.25
 
-    total_duration = min(round(current_time + 0.3, 2), 58.0)
-    print(f"⏱️ Composition Timeline: {total_duration}s across {len(timeline)} scenes with {global_word_counter} synchronized words")
+    total_duration = round(current_time + 0.5, 2)
+    print(f"⏱️ Composition Timeline: {total_duration}s across {len(timeline)} scenes with {global_word_counter} synchronized words (Mode: {'16:9 Long Video' if is_long else '9:16 Short'})")
 
     filter_complex += "".join([f"[a{i}]" for i in range(len(scenes))]) + f"concat=n={len(scenes)}:v=0:a=1[voconcat];"
     filter_complex += "[voconcat]adelay=400|400[vo_out]"
@@ -374,7 +436,7 @@ def build_composition(script_data, scene_images, scene_audios):
     # GSAP Timelines
     gsap_script = f"""
     const tl = gsap.timeline({{ paused: true }});
-    window.__timelines = {{ main: tl }};
+    window.__timelines = {{ main: tl, thumbnail: gsap.timeline({{ paused: true }}) }};
     const timelineData = {json.dumps(timeline, ensure_ascii=False)};
 
     timelineData.forEach((sc, index) => {{
@@ -382,9 +444,9 @@ def build_composition(script_data, scene_images, scene_audios):
       tl.to(imgEl, {{ autoAlpha: 1, duration: 0.35, ease: "power1.out" }}, sc.start);
       
       const scaleTo = 1.08 + (index % 3) * 0.02;
-      const xTo = (index % 2 === 0 ? 1 : -1) * 15;
+      const xTo = (index % 2 === 0 ? 1 : -1) * 20;
       tl.fromTo(imgEl, 
-        {{ scale: 1.05, x: 0 }}, 
+        {{ scale: 1.03, x: 0 }}, 
         {{ scale: scaleTo, x: xTo, duration: sc.duration + 0.3, ease: "none" }}, 
         sc.start
       );
@@ -408,17 +470,144 @@ def build_composition(script_data, scene_images, scene_audios):
     }});
 """
 
-    html = f"""<!doctype html>
-<html lang="hi">
-<head>
-  <meta charset="utf-8">
-  <title>Lost Realms Hindi - {script_data.get("youtube_title", "")}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Noto+Sans+Devanagari:wght@600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <style>
-    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    thumb_bg = scene_images[0] or f"assets_cartoon/scene_01.jpg"
+    thumb_w = 1920 if is_long else 1080
+    thumb_h = 1080 if is_long else 1920
+
+    if is_long:
+        # 16:9 Widescreen Layout Styles
+        layout_styles = f"""
+    body, html {{
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: #080402;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }}
+    #stage {{
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: #050201;
+    }}
+    .ambient-glow {{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1920px;
+      height: 1080px;
+      pointer-events: none;
+      z-index: 2;
+      background: radial-gradient(circle at 50% 50%, transparent 50%, rgba(0,0,0,0.7) 100%);
+    }}
+    .watermark-badge {{
+      position: absolute;
+      top: 36px;
+      left: 48px;
+      z-index: 10;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: #ffd700;
+      background: rgba(14, 5, 2, 0.85);
+      border: 1.5px solid rgba(212, 175, 55, 0.6);
+      border-radius: 14px;
+      padding: 8px 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.85);
+      text-transform: uppercase;
+    }}
+    .viewport-main {{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      z-index: 1;
+      background: #000000;
+    }}
+    .scene-frame {{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1920px;
+      height: 1080px;
+      object-fit: cover;
+      opacity: 0;
+      visibility: hidden;
+      transform-origin: center center;
+    }}
+    .captions-wrapper {{
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1500px;
+      min-height: 120px;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }}
+    .caption-chunk {{
+      position: absolute;
+      width: 100%;
+      opacity: 0;
+      visibility: hidden;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-size: 48px;
+      line-height: 1.35;
+      font-weight: 800;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 14px 20px;
+      padding: 16px 36px;
+      background: rgba(10, 4, 2, 0.88);
+      border: 2px solid rgba(212, 175, 55, 0.5);
+      border-radius: 22px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(10px);
+    }}
+    .caption-word {{
+      display: inline-block;
+      color: #ffffff;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-weight: 800;
+      transition: color 0.15s ease, transform 0.15s ease;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+    }}
+    .caption-word.active {{
+      color: #ffd700;
+      font-weight: 900;
+      transform: scale(1.14);
+      text-shadow: 0 0 24px rgba(255, 215, 0, 0.85), 0 2px 6px rgba(0,0,0,0.9);
+    }}
+"""
+        stage_content = f"""
+  <div id="stage" data-composition-id="main" data-width="1920" data-height="1080" data-duration="{total_duration}">
+    <div class="ambient-glow"></div>
+    <div class="watermark-badge">&#9733; FIN HACK HINDI &#9733;</div>
+    <div class="viewport-main" data-layout-allow-overflow>
+{images_html}
+    </div>
+    <div class="captions-wrapper" data-layout-allow-overlap>
+{captions_html}
+    </div>
+    <audio id="master_audio" src="audio/mix.mp3" data-start="0" data-duration="{total_duration}" preload="auto"></audio>
+  </div>
+"""
+    else:
+        # 9:16 Vertical Short Layout Styles
+        layout_styles = f"""
     body, html {{
       width: 1080px;
       height: 1920px;
@@ -555,9 +744,8 @@ def build_composition(script_data, scene_images, scene_audios):
       transform: scale(1.14);
       text-shadow: 0 0 22px rgba(255, 215, 0, 0.85), 0 2px 6px rgba(0,0,0,0.9);
     }}
-  </style>
-</head>
-<body>
+"""
+        stage_content = f"""
   <div id="stage" data-composition-id="main" data-width="1080" data-height="1920" data-duration="{total_duration}">
     <div class="ambient-glow"></div>
     <div class="top-header" data-layout-allow-safe-zone>
@@ -575,6 +763,53 @@ def build_composition(script_data, scene_images, scene_audios):
     </div>
     <audio id="master_audio" src="audio/mix.mp3" data-start="0" data-duration="{total_duration}" preload="auto"></audio>
   </div>
+"""
+
+    # Dedicated High-CTR Thumbnail Composition
+    if is_long:
+        thumb_composition = f"""
+  <div id="thumb-stage" data-composition-id="thumbnail" data-width="1920" data-height="1080" data-duration="1" style="position:relative; width:1920px; height:1080px; overflow:hidden; background:#000;">
+    <img src="{thumb_bg}" style="position:absolute; top:0; left:0; width:1920px; height:1080px; object-fit:cover; filter:brightness(0.70) contrast(1.18);">
+    <div style="position:absolute; inset:0; background:linear-gradient(90deg, rgba(8,4,2,0.95) 0%, rgba(8,4,2,0.82) 48%, rgba(8,4,2,0.2) 100%);"></div>
+    <div style="position:absolute; top:120px; left:120px; max-width:1150px; z-index:10;">
+      <div style="display:inline-block; font-family:'Cinzel', serif; font-size:32px; font-weight:900; color:#ffd700; background:rgba(20,8,4,0.92); border:2px solid #ffd700; border-radius:14px; padding:10px 28px; letter-spacing:4px; margin-bottom:28px; text-transform:uppercase; box-shadow:0 6px 25px rgba(0,0,0,0.8);">&#9733; FIN HACK HINDI &#9733;</div>
+      <div style="font-family:'Noto Sans Devanagari', sans-serif; font-size:84px; font-weight:900; color:#ffffff; line-height:1.18; text-shadow:0 6px 30px rgba(0,0,0,1); margin-bottom:14px;">{header_1}</div>
+      <div style="font-family:'Noto Sans Devanagari', sans-serif; font-size:94px; font-weight:900; color:#ffd700; line-height:1.18; text-shadow:0 0 35px rgba(255,215,0,0.65), 0 6px 30px rgba(0,0,0,1);">{header_2}</div>
+      <div style="margin-top:36px; display:inline-block; font-family:'Noto Sans Devanagari', sans-serif; font-size:42px; font-weight:900; color:#00e676; background:rgba(0,35,15,0.92); border:2.5px solid #00e676; border-radius:16px; padding:12px 32px; box-shadow:0 8px 30px rgba(0,230,118,0.4); text-shadow:0 2px 10px rgba(0,0,0,0.8);">&#9650; {stat_badge}</div>
+    </div>
+  </div>
+"""
+    else:
+        thumb_composition = f"""
+  <div id="thumb-stage" data-composition-id="thumbnail" data-width="1080" data-height="1920" data-duration="1" style="position:relative; width:1080px; height:1920px; overflow:hidden; background:#090503;">
+    <img src="{thumb_bg}" style="position:absolute; top:490px; left:0; width:1080px; height:608px; object-fit:cover;">
+    <div style="position:absolute; top:130px; left:0; width:1080px; text-align:center; z-index:10;">
+      <div style="display:inline-block; font-family:'Cinzel', serif; font-size:28px; font-weight:800; letter-spacing:5px; color:#ffd700; background:rgba(35,12,6,0.85); border:1.5px solid rgba(212,175,55,0.6); border-radius:20px; padding:6px 28px; margin-bottom:22px;">&#9733; FIN HACK HINDI &#9733;</div>
+      <h1 style="font-family:'Noto Sans Devanagari', sans-serif; font-size:68px; font-weight:900; line-height:1.22; text-transform:uppercase;">
+        <span style="color:#ffffff; text-shadow:0 5px 25px rgba(0,0,0,0.95);">{header_1}</span><br>
+        <span style="color:#ffd700; text-shadow:0 0 30px rgba(255,215,0,0.6), 0 5px 25px rgba(0,0,0,0.95);">{header_2}</span>
+      </h1>
+    </div>
+  </div>
+"""
+
+    html = f"""<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <title>Fin Hack Hindi - {script_data.get("youtube_title", "")}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Noto+Sans+Devanagari:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+{layout_styles}
+  </style>
+</head>
+<body>
+{stage_content}
+{thumb_composition}
   <script>
 {gsap_script}
   </script>
@@ -583,10 +818,10 @@ def build_composition(script_data, scene_images, scene_audios):
 """
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("✅ Modern 2D Cartoon Reel index.html generated successfully!")
+    print(f"✅ Composition index.html generated successfully! ({'16:9 1920x1080' if is_long else '9:16 1080x1920'})")
 
 def main():
-    print("🚀 Starting @lostrealmshindi Cloud Video Render Pipeline...")
+    print("🚀 Starting @FinHackHindi Cloud Video Render Pipeline...")
     client_payload = {}
     if "CLIENT_PAYLOAD" in os.environ and os.environ["CLIENT_PAYLOAD"].strip():
         try:
@@ -594,11 +829,17 @@ def main():
         except Exception:
             pass
 
-    topic = client_payload.get("topic") or "महाभारत का सबसे शक्तिशाली योद्धा: महाबली बर्बरीक"
+    # Extract parameters from client_payload or sys.argv
+    topic = client_payload.get("topic") or (sys.argv[1] if len(sys.argv) > 1 and sys.argv[1].strip() else "20 से 30 की उम्र में अमीर बनने का मास्टरप्लान")
     sarvam_key = client_payload.get("sarvam_api_key") or SARVAM_DEFAULT_KEY
     sarvam_speaker = client_payload.get("sarvam_speaker") or SARVAM_DEFAULT_SPEAKER
+    video_type = (client_payload.get("video_type") or (sys.argv[3] if len(sys.argv) > 3 else "short")).lower().strip()
+    is_long = (video_type == "long_video")
     
-    script_data = generate_script(topic)
+    print(f"📌 Mode: {'16:9 Widescreen Long Video (1920x1080)' if is_long else '9:16 Vertical Short (1080x1920)'}")
+    print(f"📌 Topic: {topic}")
+    
+    script_data = generate_script(topic, video_type)
     scenes = script_data["scenes"]
 
     print(f"🎨 Generating {len(scenes)} visual 16:9 cartoon scene artworks sequentially via Google Flow...")
@@ -614,16 +855,34 @@ def main():
         audio_file = generate_sarvam_audio(sc["id"], sc["voiceover_hi"], sarvam_key, sarvam_speaker)
         scene_audios.append(audio_file)
 
-    build_composition(script_data, scene_images, scene_audios)
+    build_composition(script_data, scene_images, scene_audios, video_type)
 
-    print("🎬 Rendering 1080x1920 30fps vertical video composition via HyperFrames...")
-    cmd_render = ["npx", "-y", "hyperframes", "render", "-o", "render_action_test.mp4", "--fps", "30", "-q", "standard"]
+    print(f"🎬 Rendering {'1920x1080' if is_long else '1080x1920'} 30fps video composition via HyperFrames...")
+    cmd_render = ["npx", "-y", "hyperframes", "render", "--composition", "main", "-o", "render_action_test.mp4", "--fps", "30", "-q", "standard"]
     subprocess.run(cmd_render, check=True)
 
-    print("📸 Extracting video thumbnail (thumb.jpg)...")
-    cmd_thumb = ["ffmpeg", "-y", "-ss", "00:00:04", "-i", "render_action_test.mp4", "-vframes", "1", "-q:v", "2", "thumb.jpg"]
-    subprocess.run(cmd_thumb, check=True)
-    print("🎉 Complete @lostrealmshindi Reel Rendered & Saved!")
+    print(f"📸 Generating high-CTR YouTube thumbnail (thumb.jpg) in {'16:9 (1920x1080)' if is_long else '9:16 (1080x1920)'}...")
+    thumb_generated = False
+    try:
+        snap_dir = os.path.abspath("thumb_snaps")
+        os.makedirs(snap_dir, exist_ok=True)
+        cmd_snap = ["npx", "-y", "hyperframes", "snapshot", ".", "--composition", "thumbnail", "--frames", "1", "-o", snap_dir]
+        res_snap = subprocess.run(cmd_snap, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if res_snap.returncode == 0:
+            snaps = [f for f in os.listdir(snap_dir) if f.endswith(".png") and not f.startswith("contact")]
+            if snaps:
+                snap_file = os.path.join(snap_dir, sorted(snaps)[0])
+                subprocess.run(["ffmpeg", "-y", "-i", snap_file, "-q:v", "2", "thumb.jpg"], check=True)
+                thumb_generated = True
+                print(f"✅ Generated high-CTR custom thumbnail thumb.jpg ({'1920x1080' if is_long else '1080x1920'})")
+    except Exception as e:
+        print(f"⚠️ Thumbnail snapshot error: {e}")
+
+    if not thumb_generated or not os.path.exists("thumb.jpg"):
+        print("⚠️ Snapshot fallback: extracting frame from rendered MP4...")
+        subprocess.run(["ffmpeg", "-y", "-ss", "00:00:04", "-i", "render_action_test.mp4", "-vframes", "1", "-q:v", "2", "thumb.jpg"], check=True)
+
+    print("🎉 Complete @FinHackHindi Video Rendered & Saved!")
 
 if __name__ == "__main__":
     main()

@@ -39,7 +39,7 @@ jobs:
         env:
           CLIENT_PAYLOAD: ${{ toJson(github.event.client_payload) }}
         run: |
-          python render.py
+          python render.py "${{ github.event.client_payload.topic }}" "${{ github.event.client_payload.language }}" "${{ github.event.client_payload.video_type }}"
 
       - name: Create GitHub Release with Video & Thumb
         env:
@@ -48,7 +48,7 @@ jobs:
           TAG="render-$(date +%s)"
           gh release create "$TAG" render_action_test.mp4 thumb.jpg \
             --title "Render $TAG" \
-            --notes "Topic: ${{ github.event.client_payload.topic }}"
+            --notes "Topic: ${{ github.event.client_payload.topic }} | Type: ${{ github.event.client_payload.video_type }}"
           echo "RELEASE_TAG=$TAG" >> $GITHUB_ENV
 
       - name: Upload Finished MP4 Video as Artifact
