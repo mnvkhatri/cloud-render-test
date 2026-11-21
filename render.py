@@ -858,7 +858,7 @@ def main():
     build_composition(script_data, scene_images, scene_audios, video_type)
 
     print(f"🎬 Rendering {'1920x1080' if is_long else '1080x1920'} 30fps video composition via HyperFrames...")
-    cmd_render = ["npx", "-y", "hyperframes", "render", "--composition", "main", "-o", "render_action_test.mp4", "--fps", "30", "-q", "standard"]
+    cmd_render = ["npx", "-y", "hyperframes", "render", "-o", "render_action_test.mp4", "--fps", "30", "-q", "standard"]
     subprocess.run(cmd_render, check=True)
 
     print(f"📸 Generating high-CTR YouTube thumbnail (thumb.jpg) in {'16:9 (1920x1080)' if is_long else '9:16 (1080x1920)'}...")
