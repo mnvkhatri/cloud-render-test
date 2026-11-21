@@ -28,26 +28,40 @@ def get_audio_duration(path):
 
 def generate_script(topic):
     import requests
-    print(f"🧠 Generating cinematic 8-scene 2D Cartoon Hindi reel script for: '{topic}'...")
+    print(f"🧠 Generating cinematic 8-scene screenplay for: '{topic}'...")
     
-    prompt = f"""You are a master animation director for @lostrealmshindi creating a 55-second viral YouTube Short / Instagram Reel.
+    prompt = f"""You are a master animation director and viral storyteller for @lostrealmshindi creating a 52-second YouTube Short / Instagram Reel.
 Topic: "{topic}".
-Art Style: Vibrant 2D Indian cartoon animation style (clean line art, rich cel shading, modern Amar Chitra Katha & Disney animated film aesthetic, 16:9 widescreen).
+Art Style: Vibrant 2D Indian cartoon animation style (clean sharp linework, rich cel shading, modern Amar Chitra Katha & Disney animated film aesthetic, 16:9 widescreen).
+
+CRITICAL SCRIPT CONSTRAINTS:
+1. Total spoken duration MUST be 50-55 seconds.
+2. In Hindi, 50 seconds equals EXACTLY 100 to 115 words TOTAL across the entire script.
+3. Divide into EXACTLY 8 sequential scenes (approx 12-14 Hindi words per scene).
+4. Each scene MUST have:
+   - "id": scene number (1 to 8)
+   - "voiceover_hi": EXACTLY 1 concise, punchy, dramatic Hindi sentence (10-14 words max). NEVER write long paragraphs!
+   - "image_prompt": A unique, distinct 16:9 visual description featuring the specific action/character of this exact moment in 2D Indian cartoon animation style. Every single scene must have a completely different visual composition and action!
+5. The story arc must be complete:
+   - Scene 1: Attention-grabbing question or shocking mystery.
+   - Scene 2-3: Historical and mythological background.
+   - Scene 4-6: The incredible event, miracle, or scientific phenomenon.
+   - Scene 7: Modern scientific confirmation or enduring wonder.
+   - Scene 8: Strong philosophical conclusion and call to comment!
 
 Return ONLY valid JSON with this exact schema (no markdown, no quotes around json):
 {{
   "youtube_title": "Shorts Title in Hindi with #Shorts",
-  "header_line_1": "Top Header Line 1 in Hindi (White text)",
-  "header_line_2": "Top Header Line 2 in Hindi (Yellow Highlight text)",
+  "header_line_1": "Top Hook Line 1 (White)",
+  "header_line_2": "Top Hook Line 2 (Yellow)",
   "scenes": [
     {{
       "id": 1,
-      "voiceover_hi": "3-4 concise Hindi sentences introducing the big mystery or character.",
-      "image_prompt": "Specific 16:9 widescreen visual description for 2D Indian cartoon animation scene"
+      "voiceover_hi": "One punchy sentence in Hindi (12 words).",
+      "image_prompt": "Unique visual description for scene 1"
     }}
   ]
-}}
-Ensure exactly 8 to 10 sequential scenes, total voiceover length ~50-55 seconds. Consistent character descriptions."""
+}}"""
 
     try:
         res = requests.post(
@@ -66,7 +80,8 @@ Ensure exactly 8 to 10 sequential scenes, total voiceover length ~50-55 seconds.
         if content.startswith("```"):
             content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
         data = json.loads(content)
-        print(f"✅ Generated script with {len(data.get('scenes', []))} cartoon scenes")
+        total_words = sum(len(s.get("voiceover_hi", "").split()) for s in data.get("scenes", []))
+        print(f"✅ Generated script with {len(data.get('scenes', []))} scenes ({total_words} total words)")
         return data
     except Exception as e:
         print(f"⚠️ Script generation error ({e}), using default fallback for '{topic}'")
@@ -77,43 +92,43 @@ Ensure exactly 8 to 10 sequential scenes, total voiceover length ~50-55 seconds.
             "scenes": [
                 {
                     "id": 1,
-                    "voiceover_hi": f"महाभारत का सबसे बड़ा रहस्य क्या था? अर्जुन या कर्ण नहीं, बल्कि एक ऐसा सत्य जो आज भी रोंगटे खड़े कर देता है!",
-                    "image_prompt": f"Epic Kurukshetra war battlefield at sunset with ancient golden war chariots and banners in vibrant 2D Indian cartoon animation style"
+                    "voiceover_hi": "महाभारत युद्ध में क्या अर्जुन या कर्ण ही सबसे शक्तिशाली योद्धा थे?",
+                    "image_prompt": "Vibrant 2D Indian cartoon animation of epic Kurukshetra battlefield at sunset with ancient golden war chariots and fluttering flags"
                 },
                 {
                     "id": 2,
-                    "voiceover_hi": "प्राचीन ग्रंथों के अनुसार, युद्ध के मैदान में एक ऐसा योद्धा उपस्थित था जिसके तरकश में केवल तीन दिव्य बाण थे।",
-                    "image_prompt": "Close-up of golden quiver holding three divine glowing celestial arrows in vibrant 2D Indian cartoon animation style"
+                    "voiceover_hi": "प्राचीन ग्रंथों के अनुसार, वहाँ एक ऐसा योद्धा आया जिसके पास केवल तीन दिव्य बाण थे।",
+                    "image_prompt": "Close-up 2D cartoon animation of a glowing golden quiver holding three divine shining arrows"
                 },
                 {
                     "id": 3,
-                    "voiceover_hi": "यह थे महाबली बर्बरीक, जिन्होंने माँ कामाख्या की कठोर तपस्या से अमोघ शक्तियों का वरदान प्राप्त किया था।",
-                    "image_prompt": "Young heroic warrior Barbareek in golden armor holding divine bow in vibrant 2D Indian cartoon animation style"
+                    "voiceover_hi": "यह थे महाबली बर्बरीक, जिन्होंने माँ कामाख्या की तपस्या से अमोघ वरदान पाया था।",
+                    "image_prompt": "Young heroic warrior Barbareek in gleaming golden armor holding a celestial bow in vibrant 2D cartoon style"
                 },
                 {
                     "id": 4,
-                    "voiceover_hi": "उनकी परीक्षा लेने स्वयं भगवान श्रीकृष्ण पीपल के वृक्ष के नीचे आए और एक असंभव चुनौती रखी।",
-                    "image_prompt": "Lord Krishna with peacock crown standing gracefully under sacred giant Peepal tree in vibrant 2D Indian cartoon animation style"
+                    "voiceover_hi": "उनकी शक्ति परखने स्वयं भगवान श्रीकृष्ण पीपल के विशाल वृक्ष के नीचे आए।",
+                    "image_prompt": "Lord Krishna with peacock crown standing serenely under a giant sacred Peepal tree in 2D cartoon animation"
                 },
                 {
                     "id": 5,
-                    "voiceover_hi": "कान्हा ने कहा: अपने एक ही बाण से इस विशाल पीपल के हर एक पत्ते को छेद कर दिखाओ।",
-                    "image_prompt": "Lord Krishna challenging Barbareek by pointing to tree canopy in vibrant 2D Indian cartoon animation style"
+                    "voiceover_hi": "कान्हा ने कहा: अपने एक ही तीर से इस पेड़ के हर पत्ते को छेद कर दिखाओ।",
+                    "image_prompt": "Lord Krishna challenging Barbareek by pointing up toward the dense green tree canopy in 2D cartoon style"
                 },
                 {
                     "id": 6,
-                    "voiceover_hi": "बर्बरीक का पहला बाण चलते ही हर पत्ते पर लाल निशान लग गया, और बाण कान्हा के पैर पर मंडराने लगा!",
-                    "image_prompt": "Glowing celestial arrow hovering over Krishna's lotus foot with hidden leaf in vibrant 2D Indian cartoon animation style"
+                    "voiceover_hi": "बर्बरीक का पहला बाण चलते ही हर पत्ता छिद गया, और बाण कान्हा के पैर पर मंडराने लगा!",
+                    "image_prompt": "A glowing divine arrow hovering inches above Lord Krishna's lotus foot where a single leaf is hidden"
                 },
                 {
                     "id": 7,
-                    "voiceover_hi": "धर्म और संपूर्ण सृष्टि की रक्षा के लिए श्रीकृष्ण ने दान में बर्बरीक का शीश मांग लिया।",
-                    "image_prompt": "Serene smiling crowned head of Barbareek on golden ceremonial platter receiving Krishna's blessing in vibrant 2D Indian cartoon animation style"
+                    "voiceover_hi": "संसार की रक्षा के लिए श्रीकृष्ण ने बर्बरीक से उनका शीश दान में माँग लिया।",
+                    "image_prompt": "Smiling crowned head of Barbareek on a golden ceremonial platter receiving divine blessings in 2D cartoon style"
                 },
                 {
                     "id": 8,
                     "voiceover_hi": "कलयुग में भगवान ने उन्हें खाटू श्याम का अमर स्वरूप दिया। कमेंट में लिखें—जय श्री श्याम!",
-                    "image_prompt": "Grand temple shrine of Khatu Shyam Ji with devotees and glowing oil lamps in vibrant 2D Indian cartoon animation style"
+                    "image_prompt": "Grand temple sanctum of Khatu Shyam Ji with glowing oil lamps and devotees with folded hands in 2D cartoon style"
                 }
             ]
         }
@@ -127,6 +142,8 @@ def download_flow_image(scene_id, prompt):
     
     for attempt in range(1, 4):
         try:
+            # Unique dynamic seed prevents bridge backend caching or race collisions
+            seed = int(time.time() * 1000) % 999999 + scene_id * 1013
             res = requests.post(
                 f"{BRIDGE_API_URL}/generate-image",
                 headers={
@@ -136,14 +153,15 @@ def download_flow_image(scene_id, prompt):
                 json={
                     "prompt": full_prompt,
                     "aspect_ratio": "16:9",
-                    "model": "flow"
+                    "model": "flow",
+                    "seed": seed
                 },
                 timeout=90
             )
-            if res.status_code == 200 and len(res.content) > 1000:
+            if res.status_code == 200 and len(res.content) > 5000:
                 with open(out_path, "wb") as f:
                     f.write(res.content)
-                print(f"✅ Scene {scene_id} Flow image ready ({len(res.content)} bytes)")
+                print(f"✅ Scene {scene_id} Flow image ready ({len(res.content)} bytes, seed: {seed})")
                 return out_path
         except Exception as e:
             print(f"⚠️ Flow image attempt {attempt} failed for Scene {scene_id} ({e})")
@@ -241,17 +259,17 @@ def build_composition(script_data, scene_images, scene_audios):
         timeline.append({
             "scene": sc,
             "id": idx + 1,
-            "image": scene_images[idx] or f"assets_cartoon/scene_{idx+1:02d}.jpg",
+            "image": scene_images[idx] or f"assets_cartoon/scene_{(idx % 12) + 1:02d}.jpg",
             "start": round(start, 2),
             "end": round(end, 2),
             "duration": round(dur, 2),
             "chunks": scene_chunks
         })
         concat_inputs.extend(["-i", audio_path])
-        filter_complex += f"[{idx}:a]apad=pad_dur=0.4[a{idx}];"
-        current_time = end + 0.4
+        filter_complex += f"[{idx}:a]apad=pad_dur=0.25[a{idx}];"
+        current_time = end + 0.25
 
-    total_duration = min(round(current_time + 0.5, 2), 56.5)
+    total_duration = min(round(current_time + 0.3, 2), 58.0)
     print(f"⏱️ Composition Timeline: {total_duration}s across {len(timeline)} scenes with {global_word_counter} synchronized words")
 
     filter_complex += "".join([f"[a{i}]" for i in range(len(scenes))]) + f"concat=n={len(scenes)}:v=0:a=1[voconcat];"
@@ -318,8 +336,8 @@ def build_composition(script_data, scene_images, scene_audios):
 
     # Images HTML
     images_html = ""
-    for sc in timeline:
-        images_html += f'    <img class="scene-frame" id="scene-{sc["id"]}" src="{sc["image"]}" alt="Scene {sc["id"]}">\n'
+    for idx, sc in enumerate(timeline):
+        images_html += f'    <img class="scene-frame" id="scene-{sc["id"]}" src="{sc["image"]}" alt="Scene {sc["id"]}" style="z-index: {idx+1}">\n'
 
     # Captions HTML
     captions_html = ""
@@ -340,27 +358,28 @@ def build_composition(script_data, scene_images, scene_audios):
       const imgEl = `#scene-${{sc.id}}`;
       tl.to(imgEl, {{ autoAlpha: 1, duration: 0.35, ease: "power1.out" }}, sc.start);
       
-      const scaleTo = 1.08 + (index % 3) * 0.03;
-      const xTo = (index % 2 === 0 ? 1 : -1) * 20;
+      const scaleTo = 1.05 + (index % 3) * 0.02;
+      const xTo = (index % 2 === 0 ? 1 : -1) * 15;
       tl.fromTo(imgEl, 
         {{ scale: 1.0, x: 0 }}, 
-        {{ scale: scaleTo, x: xTo, duration: sc.duration, ease: "none" }}, 
+        {{ scale: scaleTo, x: xTo, duration: sc.duration + 0.3, ease: "none" }}, 
         sc.start
       );
 
       if (index < timelineData.length - 1) {{
-        tl.to(imgEl, {{ autoAlpha: 0, duration: 0.3, ease: "power1.in" }}, sc.end - 0.25);
+        const nextStart = timelineData[index + 1].start;
+        tl.to(imgEl, {{ autoAlpha: 0, duration: 0.3, ease: "power1.in" }}, nextStart);
       }}
 
       sc.chunks.forEach((chunk) => {{
         const cId = `#${{chunk.chunk_id}}`;
-        tl.to(cId, {{ autoAlpha: 1, duration: 0.2, ease: "power1.out" }}, chunk.start);
-        tl.to(cId, {{ autoAlpha: 0, duration: 0.2, ease: "power1.in" }}, chunk.end - 0.15);
+        tl.to(cId, {{ autoAlpha: 1, duration: 0.15, ease: "power1.out" }}, chunk.start);
+        tl.to(cId, {{ autoAlpha: 0, duration: 0.15, ease: "power1.in" }}, chunk.end - 0.08);
 
         chunk.words.forEach((w) => {{
           const wId = `#${{w.id}}`;
-          tl.to(wId, {{ className: "caption-word active", duration: 0.1 }}, w.start);
-          tl.to(wId, {{ className: "caption-word", duration: 0.1 }}, w.end);
+          tl.to(wId, {{ className: "caption-word active", duration: 0.08 }}, w.start);
+          tl.to(wId, {{ className: "caption-word", duration: 0.08 }}, w.end);
         }});
       }});
     }});
@@ -559,13 +578,12 @@ def main():
     script_data = generate_script(topic)
     scenes = script_data["scenes"]
 
-    print(f"🎨 Generating {len(scenes)} visual 16:9 cartoon scene artworks via Google Flow...")
+    print(f"🎨 Generating {len(scenes)} visual 16:9 cartoon scene artworks sequentially via Google Flow...")
     scene_images = [None] * len(scenes)
-    with ThreadPoolExecutor(max_workers=8) as executor:
-        futures = {executor.submit(download_flow_image, sc["id"], sc["image_prompt"]): idx for idx, sc in enumerate(scenes)}
-        for fut in futures:
-            idx = futures[fut]
-            scene_images[idx] = fut.result()
+    for idx, sc in enumerate(scenes):
+        img_file = download_flow_image(sc["id"], sc["image_prompt"])
+        scene_images[idx] = img_file
+        time.sleep(2)
 
     print(f"🎙️ Generating voiceover for {len(scenes)} scenes via Sarvam AI ({sarvam_speaker})...")
     scene_audios = []
