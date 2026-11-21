@@ -30,9 +30,9 @@ def generate_script(topic):
     import requests
     print(f"🧠 Generating cinematic 8-scene screenplay for: '{topic}'...")
     
-    prompt = f"""You are a master animation director and viral storyteller for @lostrealmshindi creating a 52-second YouTube Short / Instagram Reel.
+    prompt = f"""You are a master viral animation director and financial educator for @FinHackHindi creating a 52-second YouTube Short / Instagram Reel.
 Topic: "{topic}".
-Art Style: Vibrant 2D Indian cartoon animation style (clean sharp linework, rich cel shading, modern Amar Chitra Katha & Disney animated film aesthetic, 16:9 widescreen).
+Visual Style: Modern 2D vector cartoon financial illustration style, clean vibrant graphic novel aesthetic, sharp bold linework, rich saturated colors, 16:9 widescreen.
 
 CRITICAL SCRIPT CONSTRAINTS:
 1. Total spoken duration MUST be 50-55 seconds.
@@ -40,18 +40,18 @@ CRITICAL SCRIPT CONSTRAINTS:
 3. Divide into EXACTLY 8 sequential scenes (approx 12-14 Hindi words per scene).
 4. Each scene MUST have:
    - "id": scene number (1 to 8)
-   - "voiceover_hi": EXACTLY 1 concise, punchy, dramatic Hindi sentence (10-14 words max). NEVER write long paragraphs!
-   - "image_prompt": A unique, distinct 16:9 visual description featuring the specific action/character of this exact moment in 2D Indian cartoon animation style. Every single scene must have a completely different visual composition and action!
-5. The story arc must be complete:
-   - Scene 1: Attention-grabbing question or shocking mystery.
-   - Scene 2-3: Historical and mythological background.
-   - Scene 4-6: The incredible event, miracle, or scientific phenomenon.
-   - Scene 7: Modern scientific confirmation or enduring wonder.
-   - Scene 8: Strong philosophical conclusion and call to comment!
+   - "voiceover_hi": EXACTLY 1 concise, punchy, dramatic Hindi sentence (10-14 words max). Explain money, math, rules, or secrets in simple Hindi terms anyone can understand.
+   - "image_prompt": A unique, distinct 16:9 visual description featuring the specific financial scenario/characters/action of this moment in modern 2D cartoon financial graphic style (e.g., contrasting two people, piggy bank compounding, stock chart, credit card trap, bank vault, currency notes).
+5. The story arc must follow the viral financial framework:
+   - Scene 1: Hard-hitting hook question or shocking money reality ("क्या आप जानते हैं...").
+   - Scene 2-3: The common mistake or problem that keeps 95% of people broke.
+   - Scene 4-6: The mathematical secret, hack, or exact rule (e.g. 15-15-15, Rule of 72, 50-30-20, Tax loophole).
+   - Scene 7: Real-world result (how ₹15,000 becomes ₹1 Crore or how much money is saved).
+   - Scene 8: Punchy actionable advice and call to action ("फॉलो करें Fin Hack Hindi और कमेंट में लिखें...!").
 
 Return ONLY valid JSON with this exact schema (no markdown, no quotes around json):
 {{
-  "youtube_title": "Shorts Title in Hindi with #Shorts",
+  "youtube_title": "Shorts Title in Hindi with #Shorts #FinHackHindi",
   "header_line_1": "Top Hook Line 1 (White)",
   "header_line_2": "Top Hook Line 2 (Yellow)",
   "scenes": [
@@ -70,7 +70,7 @@ Return ONLY valid JSON with this exact schema (no markdown, no quotes around jso
             json={
                 "model": "antigravity",
                 "messages": [
-                    {"role": "system", "content": "You are a professional animation director for @lostrealmshindi. Respond ONLY with valid JSON."},
+                    {"role": "system", "content": "You are a professional financial animation director for @FinHackHindi. Respond ONLY with valid JSON."},
                     {"role": "user", "content": prompt}
                 ]
             },
@@ -86,49 +86,49 @@ Return ONLY valid JSON with this exact schema (no markdown, no quotes around jso
     except Exception as e:
         print(f"⚠️ Script generation error ({e}), using default fallback for '{topic}'")
         return {
-            "youtube_title": f"{topic} #Shorts",
-            "header_line_1": "महाभारत का सबसे",
-            "header_line_2": "शक्तिशाली रहस्य",
+            "youtube_title": f"{topic} #Shorts #FinHackHindi",
+            "header_line_1": "15-15-15 का जादुई नियम",
+            "header_line_2": "₹15,000 से ₹1 करोड़",
             "scenes": [
                 {
                     "id": 1,
-                    "voiceover_hi": "महाभारत युद्ध में क्या अर्जुन या कर्ण ही सबसे शक्तिशाली योद्धा थे?",
-                    "image_prompt": "Vibrant 2D Indian cartoon animation of epic Kurukshetra battlefield at sunset with ancient golden war chariots and fluttering flags"
+                    "voiceover_hi": "क्या केवल ₹15,000 महीने की बचत से कोई आम इंसान करोड़पति बन सकता है?",
+                    "image_prompt": "Modern 2D cartoon illustration of a salaried young Indian man looking thoughtfully at his smartphone showing salary credit"
                 },
                 {
                     "id": 2,
-                    "voiceover_hi": "प्राचीन ग्रंथों के अनुसार, वहाँ एक ऐसा योद्धा आया जिसके पास केवल तीन दिव्य बाण थे।",
-                    "image_prompt": "Close-up 2D cartoon animation of a glowing golden quiver holding three divine shining arrows"
+                    "voiceover_hi": "ज़्यादातर लोग सोचते हैं कि अमीर बनने के लिए लाखों की सैलरी या कोई चमत्कार चाहिए।",
+                    "image_prompt": "2D cartoon animation of ordinary people in a bank queue watching gold coins and banknotes slipping away"
                 },
                 {
                     "id": 3,
-                    "voiceover_hi": "यह थे महाबली बर्बरीक, जिन्होंने माँ कामाख्या की तपस्या से अमोघ वरदान पाया था।",
-                    "image_prompt": "Young heroic warrior Barbareek in gleaming golden armor holding a celestial bow in vibrant 2D cartoon style"
+                    "voiceover_hi": "लेकिन अमीर लोग इस्तेमाल करते हैं यह सीक्रेट फॉर्मूला—15-15-15 का कंपाउंडिंग नियम!",
+                    "image_prompt": "Vibrant 2D graphic of glowing neon numbers 15-15-15 surrounded by green profit arrows and golden coins"
                 },
                 {
                     "id": 4,
-                    "voiceover_hi": "उनकी शक्ति परखने स्वयं भगवान श्रीकृष्ण पीपल के विशाल वृक्ष के नीचे आए।",
-                    "image_prompt": "Lord Krishna with peacock crown standing serenely under a giant sacred Peepal tree in 2D cartoon animation"
+                    "voiceover_hi": "पहला 15: आपको हर महीने एक अच्छे इंडेक्स फंड या म्यूचुअल फंड में ₹15,000 की SIP करनी है।",
+                    "image_prompt": "2D vector cartoon of an automated smartphone investment app watering a glowing digital money tree"
                 },
                 {
                     "id": 5,
-                    "voiceover_hi": "कान्हा ने कहा: अपने एक ही तीर से इस पेड़ के हर पत्ते को छेद कर दिखाओ।",
-                    "image_prompt": "Lord Krishna challenging Barbareek by pointing up toward the dense green tree canopy in 2D cartoon style"
+                    "voiceover_hi": "दूसरा 15: आपको सालाना कम से कम 15 प्रतिशत का अनुमानित रिटर्न मिलना चाहिए।",
+                    "image_prompt": "2D cartoon financial stock chart curving steeply upwards with bull horns and percentage symbols"
                 },
                 {
                     "id": 6,
-                    "voiceover_hi": "बर्बरीक का पहला बाण चलते ही हर पत्ता छिद गया, और बाण कान्हा के पैर पर मंडराने लगा!",
-                    "image_prompt": "A glowing divine arrow hovering inches above Lord Krishna's lotus foot where a single leaf is hidden"
+                    "voiceover_hi": "और तीसरा 15: आपको इस निवेश को बिना रुके लगातार 15 सालों तक जारी रखना है।",
+                    "image_prompt": "2D cartoon calendar pages flipping rapidly with a golden clock symbolizing patient disciplined compounding"
                 },
                 {
                     "id": 7,
-                    "voiceover_hi": "संसार की रक्षा के लिए श्रीकृष्ण ने बर्बरीक से उनका शीश दान में माँग लिया।",
-                    "image_prompt": "Smiling crowned head of Barbareek on a golden ceremonial platter receiving divine blessings in 2D cartoon style"
+                    "voiceover_hi": "15 साल बाद आपके कुल जमा 27 लाख बढ़कर पूरे 1 करोड़ 2 लाख रुपए बन जाएंगे!",
+                    "image_prompt": "2D cartoon of an open golden bank vault overflowing with glowing Indian currency bundles and a 1 Crore milestone sign"
                 },
                 {
                     "id": 8,
-                    "voiceover_hi": "कलयुग में भगवान ने उन्हें खाटू श्याम का अमर स्वरूप दिया। कमेंट में लिखें—जय श्री श्याम!",
-                    "image_prompt": "Grand temple sanctum of Khatu Shyam Ji with glowing oil lamps and devotees with folded hands in 2D cartoon style"
+                    "voiceover_hi": "स्मार्ट मनी हैक्स के लिए सब्सक्राइब करें Fin Hack Hindi, और अपनी SIP आज ही शुरू करें!",
+                    "image_prompt": "Hero character smiling confidently pointing at a golden subscribe bell button in 2D cartoon style"
                 }
             ]
         }
@@ -160,7 +160,7 @@ def download_flow_image(scene_id, prompt):
     raw_path = f"raw_scene_{scene_id:02d}.webp"
     out_path = f"scene_{scene_id:02d}.jpg"
     
-    full_prompt = f"Vibrant 2D Indian cartoon animation style, modern Amar Chitra Katha and Disney animated feature film aesthetic, clean sharp linework, rich cel shading, saturated colors, 16:9 widescreen: {prompt}"
+    full_prompt = f"Modern 2D vector cartoon financial illustration style, clean vibrant graphic novel aesthetic, sharp bold linework, rich saturated colors, business wealth and money theme, 16:9 widescreen: {prompt}"
     
     for attempt in range(1, 4):
         try:
@@ -561,7 +561,7 @@ def build_composition(script_data, scene_images, scene_audios):
   <div id="stage" data-composition-id="main" data-width="1080" data-height="1920" data-duration="{total_duration}">
     <div class="ambient-glow"></div>
     <div class="top-header" data-layout-allow-safe-zone>
-      <div class="channel-tag">&#9733; LOST REALMS HINDI &#9733;</div>
+      <div class="channel-tag">&#9733; FIN HACK HINDI &#9733;</div>
       <h1 class="main-title">
         <span class="title-white">{header_1}</span><br>
         <span class="title-yellow">{header_2}</span>
