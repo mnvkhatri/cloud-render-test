@@ -373,7 +373,7 @@ def build_composition(script_data, scene_images, scene_audios):
   <title>Lost Realms Hindi - {script_data.get("youtube_title", "")}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Noto+Sans+Devanagari:wght@700;800;900&family=Noto+Serif+Devanagari:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@800;900&family=Noto+Sans+Devanagari:wght@600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <style>
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
@@ -483,10 +483,10 @@ def build_composition(script_data, scene_images, scene_audios):
       width: 100%;
       opacity: 0;
       visibility: hidden;
-      font-family: 'Noto Serif Devanagari', serif;
-      font-size: 42px;
-      line-height: 1.45;
-      font-weight: 700;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-size: 44px;
+      line-height: 1.4;
+      font-weight: 800;
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
@@ -501,7 +501,9 @@ def build_composition(script_data, scene_images, scene_audios):
     }}
     .caption-word {{
       display: inline-block;
-      color: #e0d5c5;
+      color: #ffffff;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-weight: 800;
       transition: color 0.15s ease, transform 0.15s ease;
       text-shadow: 0 2px 6px rgba(0,0,0,0.9);
     }}
