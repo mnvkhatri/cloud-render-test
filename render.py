@@ -133,10 +133,32 @@ Return ONLY valid JSON with this exact schema (no markdown, no quotes around jso
             ]
         }
 
+def clean_watermark(raw_path, out_path):
+    try:
+        cmd_probe = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=s=x:p=0", raw_path]
+        dim = subprocess.check_output(cmd_probe).decode().strip().split("x")
+        w, h = int(dim[0]), int(dim[1])
+        box_w = max(int(w * 0.14), 100)
+        box_h = max(int(h * 0.18), 90)
+        x_pos = max(0, w - box_w - int(w * 0.01))
+        y_pos = max(0, h - box_h - int(h * 0.01))
+        cmd_delogo = [
+            "ffmpeg", "-y", "-i", raw_path,
+            "-vf", f"delogo=x={x_pos}:y={y_pos}:w={box_w}:h={box_h}",
+            "-q:v", "2",
+            out_path
+        ]
+        subprocess.run(cmd_delogo, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return out_path
+    except Exception as e:
+        subprocess.run(["ffmpeg", "-y", "-i", raw_path, "-q:v", "2", out_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return out_path
+
 def download_flow_image(scene_id, prompt):
     import requests
     print(f"🎨 Generating 16:9 Google Flow image for Scene {scene_id} via bridge.mnvcloud.online...")
-    out_path = f"scene_{scene_id:02d}.webp"
+    raw_path = f"raw_scene_{scene_id:02d}.webp"
+    out_path = f"scene_{scene_id:02d}.jpg"
     
     full_prompt = f"Vibrant 2D Indian cartoon animation style, modern Amar Chitra Katha and Disney animated feature film aesthetic, clean sharp linework, rich cel shading, saturated colors, 16:9 widescreen: {prompt}"
     
@@ -159,9 +181,10 @@ def download_flow_image(scene_id, prompt):
                 timeout=90
             )
             if res.status_code == 200 and len(res.content) > 5000:
-                with open(out_path, "wb") as f:
+                with open(raw_path, "wb") as f:
                     f.write(res.content)
-                print(f"✅ Scene {scene_id} Flow image ready ({len(res.content)} bytes, seed: {seed})")
+                clean_watermark(raw_path, out_path)
+                print(f"✅ Scene {scene_id} ready with Gemini watermark cleanly removed (seed: {seed})")
                 return out_path
         except Exception as e:
             print(f"⚠️ Flow image attempt {attempt} failed for Scene {scene_id} ({e})")
@@ -358,10 +381,10 @@ def build_composition(script_data, scene_images, scene_audios):
       const imgEl = `#scene-${{sc.id}}`;
       tl.to(imgEl, {{ autoAlpha: 1, duration: 0.35, ease: "power1.out" }}, sc.start);
       
-      const scaleTo = 1.05 + (index % 3) * 0.02;
+      const scaleTo = 1.08 + (index % 3) * 0.02;
       const xTo = (index % 2 === 0 ? 1 : -1) * 15;
       tl.fromTo(imgEl, 
-        {{ scale: 1.0, x: 0 }}, 
+        {{ scale: 1.05, x: 0 }}, 
         {{ scale: scaleTo, x: xTo, duration: sc.duration + 0.3, ease: "none" }}, 
         sc.start
       );
